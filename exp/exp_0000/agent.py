@@ -23,8 +23,8 @@ class Mario:
         self.init_learning = cfg.init_learning
         self.use_cuda = torch.cuda.is_available()
         self.curr_step = 0
+        self.restart_step = 0
         self.save_every = cfg.save_interval
-        self.restart_episodes = 0
 
         # model
         self.state_dim = (cfg.state_channel, cfg.state_height, cfg.state_width)
@@ -149,7 +149,7 @@ class Mario:
     def learn(self):
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
-        if self.curr_step < self.burnin + self.restart_episodes:
+        if self.curr_step < self.burnin + self.restart_step:
             return None, None
         if self.curr_step % self.learn_every != 0:
             return None, None
@@ -234,6 +234,7 @@ class Mario:
         # logをparamに移行
         self.exploration_rate = self.log_df['epsilon'].values[-1]
         self.curr_step = self.log_df['step'].values[-1]
-        self.restart_episodes = self.log_df['episode'].values[-1]
-        print(f'Start from episode: {self.restart_episodes}')
-        return self.restart_episodes
+        self.restart_step = self.curr_step
+        restart_episodes = self.log_df['episode'].values[-1]
+        print(f'Start from episode: {restart_episodes}')
+        return restart_episodes
