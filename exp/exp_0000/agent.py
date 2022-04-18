@@ -188,8 +188,8 @@ class Mario:
             step=self.curr_step,
             reward=self.curr_ep_reward,
             length=self.curr_ep_length,
-            average=ep_avg_loss,
-            avg_qs=ep_avg_q
+            average_loss=ep_avg_loss,
+            average_q=ep_avg_q
         ))
         self.init_episode()
 
