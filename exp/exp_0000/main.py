@@ -16,7 +16,7 @@ from model import MarioNet
 from agent import Mario
 
 # ログ
-from logger import MetricLogger
+# from logger import MetricLogger
 
 
 @hydra.main(config_path='config', config_name='config')
@@ -38,7 +38,7 @@ def main(cfg: DictConfig):
 
     # ログ
     # loadできたら
-    logger = MetricLogger(save_dir)
+    # logger = MetricLogger(save_dir)
 
     # 学習
     # train_one_episodeを作る
@@ -48,20 +48,17 @@ def main(cfg: DictConfig):
             action = mario.action(state)
             next_state, reward, done, info = env.step(action)
             mario.cache(state, next_state, action, reward, done)
-            q, loss = mario.learn()
-            logger.log_step(reward, loss, q)
+            mario.learn()
             state = next_state
             if info['flag_get']:
                 print(f'CLEAR!!!: Episode: {episode}')
                 break
             if done:
                 break
-        logger.log_episode()
+        mario.log_episode(episode)
 
-        if episode != 0 and episode % cfg.save_interval == 0:
+        if episode % cfg.save_interval == 0:
             mario.save()
-            logger.record(episode=episode,
-                          epsilon=mario.exploration_rate, step=mario.curr_step)
 
 
 if __name__ == '__main__':
