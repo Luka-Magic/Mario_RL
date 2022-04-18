@@ -1,5 +1,5 @@
 ######   BASIC   ###############################
-init_learning: False
+init_learning: True
 
 environment: 'SuperMarioBros-1-1-v1'
 actions: [['right'], ['right', 'A']] # 'SIMPLE_MOVEMENT'
