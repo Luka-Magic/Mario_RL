@@ -208,7 +208,7 @@ class Mario:
         self.record_time = time.time()
         time_since_last_record = np.round(
             self.record_time - last_record_time, 3)
-
+        
         datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         print(
             f"Episode {self.episode} - "
@@ -225,7 +225,9 @@ class Mario:
         self.log_df.append([self.curr_step, self.episode,
                             self.exploration_rate, mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record, datetime_now])
         self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
+
         for metric in ['ep_rewards', 'ep_lengths', 'ep_avg_losses', 'ep_avg_qs']:
+            print(getattr(self, f'moving_avg_{metric}'))
             plt.plot(getattr(self, f'moving_avg_{metric}'))
             plt.savefig(getattr(self, f'{metric}_plot'))
             plt.clf()
