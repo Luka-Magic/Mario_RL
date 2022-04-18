@@ -55,15 +55,15 @@ class Mario:
 
         # log variable
 
-        self.ep_rewards = []
-        self.ep_lengths = []
-        self.ep_avg_losses = []
-        self.ep_avg_qs = []
+        # self.ep_rewards = []
+        # self.ep_lengths = []
+        # self.ep_avg_losses = []
+        # self.ep_avg_qs = []
 
-        self.log_df = pd.DataFrame(
-            columns=['step', 'episode', 'epsilon', 'reward', 'loss', 'Q', 'Time delta', 'Datetime'])
+        # self.log_df = pd.DataFrame(
+        #     columns=['step', 'episode', 'epsilon', 'reward', 'loss', 'Q', 'Time delta', 'Datetime'])
 
-        self.record_time = time.time()
+        # self.record_time = time.time()
 
         self.init_episode()
 
@@ -173,54 +173,66 @@ class Mario:
 
     def log_episode(self, episode):
         self.episode = episode
-        self.ep_rewards.append(self.curr_ep_reward)
-        self.ep_lengths.append(self.curr_ep_length)
+        # self.ep_rewards.append(self.curr_ep_reward)
+        # self.ep_lengths.append(self.curr_ep_length)
         if self.curr_ep_loss_length == 0:
             ep_avg_loss = 0
             ep_avg_q = 0
         else:
-            ep_avg_loss = np.round(self.curr_ep_loss /
-                                   self.curr_ep_loss_length, 5)
-            ep_avg_q = np.round(self.curr_ep_q / self.curr_ep_loss_length, 5)
-        self.ep_avg_losses.append(ep_avg_loss)
-        self.ep_avg_qs.append(ep_avg_q)
+            ep_avg_loss = self.curr_ep_loss / self.curr_ep_loss_length
+            ep_avg_q = self.curr_ep_q / self.curr_ep_loss_length
+        # self.ep_avg_losses.append(ep_avg_loss)
+        # self.ep_avg_qs.append(ep_avg_q)
+        wandb.log(dict(
+            episode=episode,
+            step=self.curr_step,
+            reward=self.curr_ep_reward,
+            length=self.curr_ep_length,
+            average=ep_avg_loss,
+            avg_qs=ep_avg_q
+        ))
         self.init_episode()
 
     def save(self):
         save_path = (self.save_dir / f'mario_net.pth')
         # modelをsave
-        torch.save(self.net.state_dict(), save_path)
+        torch.save(dict(
+            model=self.net.state_dict(),
+            exploration_rate=self.exploration_rate,
+            step=self.curr_step,
+            episode=self.episode
+        ), save_path)
         # record
-        mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
-        mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
-        mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)
-        mean_ep_q = np.round(np.mean(self.ep_avg_qs[-100:]), 3)
-        last_record_time = self.record_time
-        self.record_time = time.time()
-        time_since_last_record = np.round(
-            self.record_time - last_record_time, 3)
+        # mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
+        # mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
+        # mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)
+        # mean_ep_q = np.round(np.mean(self.ep_avg_qs[-100:]), 3)
+        # last_record_time = self.record_time
+        # self.record_time = time.time()
+        # time_since_last_record = np.round(
+        #     self.record_time - last_record_time, 3)
 
         datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         print(
             f"Episode {self.episode} - "
             f"Step {self.curr_step} - "
             f"Epsilon {self.exploration_rate:.3f} - "
-            f"Mean Reward {mean_ep_reward} - "
-            f"Mean Length {mean_ep_length} - "
-            f"Mean Loss {mean_ep_loss} - "
-            f"Mean Q Value {mean_ep_q} - "
-            f"Time Delta {time_since_last_record} - "
+            # f"Mean Reward {mean_ep_reward} - "
+            # f"Mean Length {mean_ep_length} - "
+            # f"Mean Loss {mean_ep_loss} - "
+            # f"Mean Q Value {mean_ep_q} - "
+            # f"Time Delta {time_since_last_record} - "
             f"Time {datetime_now}"
         )
 
-        log_list = [self.curr_step, self.episode, self.exploration_rate,
-                    mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record, datetime_now]
-        self.log_df = self.log_df.append(
-            {column: log for column, log in zip(self.log_df.columns, log_list)}, ignore_index=True)
-        self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
-        # wandb
-        wandb.log({column: log for column, log in zip(
-            self.log_df.columns, log_list)})
+        # log_list = [self.curr_step, self.episode, self.exploration_rate,
+        #             mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record, datetime_now]
+        # self.log_df = self.log_df.append(
+        #     {column: log for column, log in zip(self.log_df.columns, log_list)}, ignore_index=True)
+        # self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
+        # # wandb
+        # wandb.log({column: log for column, log in zip(
+        #     self.log_df.columns, log_list)})
 
     def load(self):
         if self.init_learning:
@@ -228,14 +240,19 @@ class Mario:
         if not (self.save_dir / 'mario_net.pth').exists():
             print('Zero Start')
             return 0
+        load_data = torch.load(self.save_dir / 'mario_net.pth')
         # model
-        self.net.load_state_dict(torch.load(self.save_dir / 'mario_net.pth'))
+        self.net.load_state_dict(load_data['model'])
         # log
-        self.log_df = pd.read_csv(self.save_dir / 'log.csv')
+        # self.log_df = pd.read_csv(self.save_dir / 'log.csv')
         # logをparamに移行
-        self.exploration_rate = self.log_df['epsilon'].values[-1]
-        self.curr_step = self.log_df['step'].values[-1]
+        # self.exploration_rate = self.log_df['epsilon'].values[-1]
+        self.exploration_rate = load_data['exploration_rate']
+        # self.curr_step = self.log_df['step'].values[-1]
+        self.curr_step = load_data['step']
+
         self.restart_steps = self.curr_step
-        self.restart_episodes = self.log_df['episode'].values[-1]
+        # self.restart_episodes = self.log_df['episode'].values[-1]
+        self.restart_episodes = load_data['episode']
         print(f'Start from episode: {self.restart_episodes}')
         return self.restart_episodes
