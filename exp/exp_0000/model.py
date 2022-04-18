@@ -2,12 +2,12 @@ from torch import nn
 import copy
 
 class MarioNet(nn.Module):
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, cfg, input_dim, output_dim):
         super().__init__()
         c, h, w = input_dim
-        if h != 84:
+        if h != cfg.state_height:
             raise ValueError(f'Expecting input height: 84, got: {h}')
-        if w != 84:
+        if w != cfg.state_width:
             raise ValueError(f'Expecting input width: 84, got: {w}')
 
         self.online = nn.Sequential(
@@ -25,7 +25,7 @@ class MarioNet(nn.Module):
             nn.Linear(512, output_dim)
         )
 
-        self.target = copy.deepcopy(self.online)  # ターゲット方策
+        self.target = copy.deepcopy(self.online)
 
         for p in self.target.parameters():
             p.requires_grad = False

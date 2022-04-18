@@ -2,15 +2,14 @@ import random
 import numpy as np
 import torch
 from torch import nn
-from networks import MarioNet
+from model import MarioNet
 from collections import deque
 
 class Mario:
-    def __init__(self, state_dim, action_dim, save_dir):
-        # act
-        self.state_dim = state_dim
+    def __init__(self, cfg, action_dim, save_dir):
         self.action_dim = action_dim
         self.save_dir = save_dir
+        self.state_dim = (cfg.state_channel, cfg.state_height, cfg.state_width)
 
         self.use_cuda = torch.cuda.is_available()
 
@@ -18,42 +17,40 @@ class Mario:
         if self.use_cuda:
             self.net = self.net.to(device='cuda')
 
-        self.exploration_rate = 1
-        self.exploration_rate_decay = 0.99999975
-        self.exploration_rate_min = 0.1
+        self.exploration_rate = cfg.exploration_rate
+        self.exploration_rate_decay = cfg.exploration_rate_decay
+        self.exploration_rate_min = cfg.exploration_rate_min
         self.curr_step = 0
 
-        self.save_every = 5e5  # netを保存するまでの実験ステップの数
+        self.save_every = cfg.save_interval
 
-        # cache
-        self.memory = deque(maxlen=50000)
-        self.batch_size = 32
+        self.memory = deque(maxlen=cfg.memory_length)
+        self.batch_size = cfg.batch_size
 
-        # learn
-        self.gamma = 0.9
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
-        self.loss_fn = nn.SmoothL1Loss()  # huberloss
+        self.gamma = cfg.gamma
+        if cfg.optimizer == 'Adam':
+            self.optimizer = torch.optim.Adam(self.net.parameters(), lr=cfg.lr)
+        if cfg.loss_fn == 'SmoothL1Loss':
+            self.loss_fn = nn.SmoothL1Loss()
 
-        self.burnin = 1e4  # 経験を訓練させるために最低限必要なステップ数
-        self.learn_every = 3  # 挙動方策を更新するタイミング
-        self.sync_every = 1e4  # ターゲットと挙動の同期のタイミング
+        self.burnin = cfg.burnin
+        self.learn_every = cfg.learn_every
+        self.sync_every = cfg.sync_every
 
-    def action(self, state):  # epsilon-greedyで行動を選択
+    def action(self, state):
         if np.random.rand() < self.exploration_rate:
-            # 探索
             action_idx = np.random.randint(self.action_dim)
 
         else:
-            # 活用
             state = state.__array__()
             if self.use_cuda:
                 state = torch.tensor(state).cuda()
             else:
                 state = torch.tensor(state)
             state = state.unsqueeze(0)
-            action_values = self.net(state, model='online')  # Q値を出力
+            action_values = self.net(state, model='online')
             action_idx = torch.argmax(
-                action_values, axis=1).item()  # Qが最大になるアクションを出力
+                action_values, axis=1).item()
 
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(
@@ -107,7 +104,7 @@ class Mario:
         self.optimizer.step()
         return loss.item()
 
-    def sync_Q_target(self):  # ターゲット方策に挙動方策のパラメータを移す
+    def sync_Q_target(self):
         self.net.target.load_state_dict(self.net.online.state_dict())
 
     def save(self):
