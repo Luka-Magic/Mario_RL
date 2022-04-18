@@ -58,6 +58,7 @@ def main(cfg: DictConfig):
             if done:
                 break
         logger.log_episode()
+        
         if episode % cfg.save_interval == 0:
             mario.save()
             logger.record(episode=episode,
