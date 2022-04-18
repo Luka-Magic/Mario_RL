@@ -36,25 +36,23 @@ def main(cfg: DictConfig):
     # if not cfg.init_learning:
     #     pass
 
-    # ログ
-    # loadできたら
-    # logger = MetricLogger(save_dir)
-
     # 学習
     # train_one_episodeを作る
     for episode in tqdm(range(cfg.episodes)):
         state = env.reset()
+        count = 0
         while 1:
             action = mario.action(state)
             next_state, reward, done, info = env.step(action)
             mario.cache(state, next_state, action, reward, done)
             mario.learn()
             state = next_state
-            if info['flag_get']:
-                print(f'CLEAR!!!: Episode: {episode}')
+
+            if done or info['flag_get']:
                 break
-            if done:
-                break
+            count += 1
+            if count % 100 == 0:
+                print(f'count: {count}')
         mario.log_episode(episode)
 
         if episode % cfg.save_interval == 0:
