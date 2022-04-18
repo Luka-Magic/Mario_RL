@@ -416,3 +416,7 @@ def main(cfg: DictConfig):
         if episode % 50 == 0:
             logger.record(episode=episode,
                           epsilon=mario.exploration_rate, step=mario.curr_step)
+
+
+if __name__ == '__main__':
+    main()
