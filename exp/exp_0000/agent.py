@@ -222,12 +222,12 @@ class Mario:
             f"Time {datetime_now}"
         )
 
-        self.log_df.append([self.curr_step, self.episode,
-                            self.exploration_rate, mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record, datetime_now])
+        log_list = [self.curr_step, self.episode, self.exploration_rate, mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record, datetime_now]
+        self.log_df = self.log_df.append(
+            {column: log for column, log in zip(self.log_df.columns, log_list)}, ignore_index=True)
         self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
 
         for metric in ['ep_rewards', 'ep_lengths', 'ep_avg_losses', 'ep_avg_qs']:
-            print(getattr(self, f'moving_avg_{metric}'))
             plt.plot(getattr(self, f'moving_avg_{metric}'))
             plt.savefig(getattr(self, f'{metric}_plot'))
             plt.clf()
