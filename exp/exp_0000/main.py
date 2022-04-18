@@ -23,9 +23,8 @@ from logger import MetricLogger
 def main(cfg: DictConfig):
     # 設定
     save_dir = Path('/'.join(os.getcwd().split('/')
-                    [:-6])) / f"outputs/{os.getcwd().split('/')[-4]}/"
-    Path.touch(save_dir, exist_ok=True)
-    print('savedir: ', save_dir)
+                    [:-6])) / f"outputs/{os.getcwd().split('/')[-4]}"
+    save_dir.mkdir(exist_ok=True)
 
     # 環境
     env = gym_super_mario_bros.make(cfg.environment)
