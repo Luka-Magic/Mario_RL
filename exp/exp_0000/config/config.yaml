@@ -3,8 +3,6 @@ init_learning: False
 environment: 'SuperMarioBros-1-1-v1'
 actions: [['right'], ['right', 'A']] # 'SIMPLE_MOVEMENT'
 
-
-
 state_height: 84
 state_width: 84
 state_channel: 4
@@ -13,16 +11,16 @@ state_skip: 4
 episodes: 30000
 batch_size: 32
 save_interval: 100
-memory_length: 5e4
+memory_length: 50000
 
 ##
 gamma: 0.9
 lr: 0.00025
 optimizer: Adam
 loss_fn: SmoothL1Loss
-burnin: 1e4
+burnin: 10000
 learn_every: 3
-sync_every: 1e4
+sync_every: 10000
 
 
 ## 
