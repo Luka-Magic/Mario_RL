@@ -52,10 +52,10 @@ class Mario:
         self.ep_avg_losses_plot = save_dir / 'loss_plot.jpg'
         self.ep_avg_qs_plot = save_dir / 'q_plot.jpg'
 
-        self.episode_rewards = []
-        self.episode_length = []
-        self.episode_loss = []
-        self.episode_q = []
+        self.ep_rewards = []
+        self.ep_lengths = []
+        self.ep_avg_losses = []
+        self.ep_avg_qs = []
 
         self.moving_avg_ep_rewards = []
         self.moving_avg_ep_lengths = []
