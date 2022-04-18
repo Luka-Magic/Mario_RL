@@ -364,7 +364,7 @@ def main(cfg: DictConfig):
     # 設定
     save_dir = os.path.join(
         '/'.join(os.getcwd().split('/')[:-6]), f"outputs/{os.getcwd().split('/')[-4]}")
-    os.mkdir(save_dir, exist_ok=True)
+    os.makedirs(save_dir, exist_ok=True)
 
     print(save_dir)
 
