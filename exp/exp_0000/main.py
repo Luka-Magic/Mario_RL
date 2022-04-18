@@ -23,7 +23,7 @@ from logger import MetricLogger
 def main(cfg: DictConfig):
     # 設定
     save_dir = Path('/'.join(os.getcwd().split('/')
-                    [:-6])) / f"outputs/{os.getcwd().split('/')[-4]}"
+                    [:-6])) / f"outputs/{os.getcwd().split('/')[-4]}/"
     Path.touch(save_dir, exist_ok=True)
     print('savedir: ', save_dir)
 
@@ -58,7 +58,7 @@ def main(cfg: DictConfig):
             if done:
                 break
         logger.log_episode()
-        
+
         if episode % cfg.save_interval == 0:
             mario.save()
             logger.record(episode=episode,
