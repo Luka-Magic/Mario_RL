@@ -18,6 +18,7 @@ class Mario:
         self.save_dir = save_dir
 
         # init
+        self.init_learning = cfg.init_learning
         self.use_cuda = torch.cuda.is_available()
         self.curr_step = 0
         self.save_every = cfg.save_interval
@@ -67,6 +68,9 @@ class Mario:
             columns=['step', 'episode', 'epsilon', 'reward', 'loss', 'Q', 'Time delta', 'Datetime'])
 
         self.record_time = time.time()
+
+        if not cfg.init_learning:
+            self.load()
 
         self.init_episode()
 
@@ -187,14 +191,8 @@ class Mario:
 
     def save(self):
         save_path = (self.save_dir / f'mario_net.pth')
-        # memoryをsave
-        with open(self.save_dir / 'memory.pkl', 'wb') as f:
-            pickle.dump(self.memory, f)
         # modelをsave
-        torch.save(
-            dict(model=self.net.state_dict(),
-                 exploration_rate=self.exploration_rate), save_path
-        )
+        torch.save(self.net.state_dict(), save_path)
         # record
         mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
         mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
@@ -208,7 +206,7 @@ class Mario:
         self.record_time = time.time()
         time_since_last_record = np.round(
             self.record_time - last_record_time, 3)
-        
+
         datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         print(
             f"Episode {self.episode} - "
@@ -222,7 +220,8 @@ class Mario:
             f"Time {datetime_now}"
         )
 
-        log_list = [self.curr_step, self.episode, self.exploration_rate, mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record, datetime_now]
+        log_list = [self.curr_step, self.episode, self.exploration_rate,
+                    mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record, datetime_now]
         self.log_df = self.log_df.append(
             {column: log for column, log in zip(self.log_df.columns, log_list)}, ignore_index=True)
         self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
@@ -231,3 +230,21 @@ class Mario:
             plt.plot(getattr(self, f'moving_avg_{metric}'))
             plt.savefig(getattr(self, f'{metric}_plot'))
             plt.clf()
+
+    def load(self):
+        if self.init_learning:
+            return 0
+        if not (self.save_dir / 'mario_net.pth').exists():
+            print('Zero Start')
+            return 0
+        # model
+        self.net.load_state_dict(torch.load(self.save_dir / 'mario_net.pth'))
+        # log
+        self.log_df = pd.read_csv(self.save_dir / 'log.csv')
+        # logをparamに移行
+        self.exploration_rate = self.load_df['epsilon'].values[-1]
+        self.curr_step = self.load_df['epsilon'].values[-1]
+        init_episode = self.load_df['episode'].values[-1]
+        print(f'Start from episode: {init_episode}')
+        return init_episode
+

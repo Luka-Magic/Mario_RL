@@ -28,11 +28,10 @@ def main(cfg: DictConfig):
     # エージェント
     # load_state_dict
     mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
-    # if not cfg.init_learning:
-    #     pass
+    init_episode = mario.load()
 
     # 学習
-    for episode in tqdm(range(cfg.episodes)):
+    for episode in tqdm(range(init_episode, cfg.episodes)):
         state = env.reset()
         while True:
             action = mario.action(state)
