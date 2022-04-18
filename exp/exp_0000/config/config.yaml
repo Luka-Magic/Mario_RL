@@ -1,5 +1,6 @@
 ######   BASIC   ###############################
 init_learning: False
+wandb_project: RL_SMB_test
 
 environment: 'SuperMarioBros-1-1-v1'
 actions: [['right'], ['right', 'A']] # 'SIMPLE_MOVEMENT'
