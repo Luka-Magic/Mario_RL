@@ -41,7 +41,7 @@ def main(cfg: DictConfig):
     for episode in tqdm(range(cfg.episodes)):
         state = env.reset()
         count = 0
-        while 1:
+        while True:
             action = mario.action(state)
             next_state, reward, done, info = env.step(action)
             mario.cache(state, next_state, action, reward, done)
@@ -57,7 +57,6 @@ def main(cfg: DictConfig):
 
         if episode % cfg.save_interval == 0:
             mario.save()
-
 
 if __name__ == '__main__':
     main()

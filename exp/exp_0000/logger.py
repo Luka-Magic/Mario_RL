@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import time, datetime
+import time
+import datetime
+
 
 class MetricLogger:
     def __init__(self, save_dir):

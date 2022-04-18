@@ -7,6 +7,7 @@ from collections import deque
 import pandas as pd
 import pickle
 import time
+import datetime
 import matplotlib.pyplot as plt
 
 
@@ -63,7 +64,7 @@ class Mario:
         self.moving_avg_ep_avg_qs = []
 
         self.log_df = pd.DataFrame(
-            columns=['step', 'episode', 'epsilon', 'reward', 'loss', 'Q', 'Time delta'])
+            columns=['step', 'episode', 'epsilon', 'reward', 'loss', 'Q', 'Time delta', 'Datetime'])
 
         self.record_time = time.time()
 
@@ -208,8 +209,21 @@ class Mario:
         time_since_last_record = np.round(
             self.record_time - last_record_time, 3)
 
+        datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+        print(
+            f"Episode {self.episode} - "
+            f"Step {self.curr_step} - "
+            f"Epsilon {self.exploration_rate:.3f} - "
+            f"Mean Reward {mean_ep_reward} - "
+            f"Mean Length {mean_ep_length} - "
+            f"Mean Loss {mean_ep_loss} - "
+            f"Mean Q Value {mean_ep_q} - "
+            f"Time Delta {time_since_last_record} - "
+            f"Time {datetime_now}"
+        )
+
         self.log_df.append([self.curr_step, self.episode,
-                            self.exploration_rate, mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record])
+                            self.exploration_rate, mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record, datetime_now])
         self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
         for metric in ['ep_rewards', 'ep_lengths', 'ep_avg_losses', 'ep_avg_qs']:
             plt.plot(getattr(self, f'moving_avg_{metric}'))
