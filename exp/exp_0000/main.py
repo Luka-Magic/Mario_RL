@@ -362,10 +362,9 @@ class MetricLogger:
 @hydra.main(config_path='config', config_name='config')
 def main(cfg: DictConfig):
     # 設定
-    save_dir = os.path.join(
-        '/'.join(os.getcwd().split('/')[:-6]), f"outputs/{os.getcwd().split('/')[-4]}")
-    os.makedirs(save_dir, exist_ok=True)
-
+    save_dir = Path('/'.join(os.getcwd().split('/')
+                    [:-6])) / f"outputs/{os.getcwd().split('/')[-4]}"
+    Path.touch(save_dir, exist_ok=True)
     print(save_dir)
 
     episodes = cfg.episodes
