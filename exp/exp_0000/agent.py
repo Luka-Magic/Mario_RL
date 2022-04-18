@@ -216,6 +216,7 @@ class Mario:
         self.log_df = self.log_df.append(
             {column: log for column, log in zip(self.log_df.columns, log_list)}, ignore_index=True)
         self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
+        # wandb
         wandb.log({column: log for column, log in zip(
             self.log_df.columns, log_list)})
 
