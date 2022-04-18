@@ -248,8 +248,8 @@ class Mario:
         # log
         self.log_df = pd.read_csv(self.save_dir / 'log.csv')
         # logをparamに移行
-        self.exploration_rate = self.load_df['epsilon'].values[-1]
-        self.curr_step = self.load_df['epsilon'].values[-1]
-        init_episode = self.load_df['episode'].values[-1]
+        self.exploration_rate = self.log_df['epsilon'].values[-1]
+        self.curr_step = self.log_df['epsilon'].values[-1]
+        init_episode = self.log_df['episode'].values[-1]
         print(f'Start from episode: {init_episode}')
         return init_episode
