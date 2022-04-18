@@ -48,7 +48,7 @@ def main(cfg: DictConfig):
                 break
         mario.log_episode(episode)
 
-        if episode != 0 and episode != mario.restart_episode and episode % cfg.save_interval == 0:
+        if episode != 0 and episode != mario.restart_episodes and episode % cfg.save_interval == 0:
             mario.save()
 
 
