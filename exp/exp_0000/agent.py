@@ -2,6 +2,7 @@ import random
 import numpy as np
 import torch
 from torch import nn
+from torch.cuda.amp import autocast, GradScaler
 from model import MarioNet
 from collections import deque
 import pandas as pd
@@ -40,6 +41,7 @@ class Mario:
 
         # learn
         self.gamma = cfg.gamma
+        self.scaler = GradScaler()
         if cfg.optimizer == 'Adam':
             self.optimizer = torch.optim.Adam(self.net.parameters(), lr=cfg.lr)
         if cfg.loss_fn == 'SmoothL1Loss':
@@ -85,7 +87,8 @@ class Mario:
             else:
                 state = torch.tensor(state)
             state = state.unsqueeze(0)
-            action_values = self.net(state, model='online')
+            with autocast():
+                action_values = self.net(state, model='online')
             action_idx = torch.argmax(
                 action_values, axis=1).item()
 
@@ -133,18 +136,21 @@ class Mario:
 
     @torch.no_grad()
     def td_target(self, reward, next_state, done):
-        next_state_Q = self.net(next_state, model='online')
-        best_action = torch.argmax(next_state_Q, axis=1)
-        next_Q = self.net(next_state, model='target')[
-            np.arange(0, self.batch_size), best_action
-        ]
+        with autocast():
+            next_state_Q = self.net(next_state, model='online')
+            best_action = torch.argmax(next_state_Q, axis=1)
+            next_Q = self.net(next_state, model='target')[
+                np.arange(0, self.batch_size), best_action
+            ]
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
     def update_Q_online(self, td_estimate, td_target):
-        loss = self.loss_fn(td_estimate, td_target)
+        with autocast():
+            loss = self.loss_fn(td_estimate, td_target)
+        self.scaler.scale(loss).backward()
+        self.scaler.step(self.optimizer)
+        self.scaler.update()
         self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
         return loss.item()
 
     def sync_Q_target(self):
@@ -247,4 +253,3 @@ class Mario:
         init_episode = self.load_df['episode'].values[-1]
         print(f'Start from episode: {init_episode}')
         return init_episode
-
