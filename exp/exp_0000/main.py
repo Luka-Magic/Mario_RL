@@ -9,7 +9,6 @@ import torch
 # 環境
 import gym_super_mario_bros
 
-
 from env_wrapper import all_wrapper
 
 # エージェント
