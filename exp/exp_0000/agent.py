@@ -109,8 +109,7 @@ class Mario:
         self.net.target.load_state_dict(self.net.online.state_dict())
 
     def save(self):
-        save_path = (self.save_dir /
-                     f'mario_net_{int(self.curr_step // self.save_every)}.pth')
+        save_path = (self.save_dir / f'mario_net.pth')
         torch.save(
             dict(model=self.net.state_dict(),
                  exploration_rate=self.exploration_rate), save_path
@@ -120,8 +119,6 @@ class Mario:
     def learn(self):
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
-        if self.curr_step % self.save_every == 0:
-            self.save()
         if self.curr_step < self.burnin:
             return None, None
         if self.curr_step % self.learn_every != 0:
