@@ -10,6 +10,7 @@ import pickle
 import time
 import datetime
 import matplotlib.pyplot as plt
+import wandb
 
 
 class Mario:
@@ -61,9 +62,6 @@ class Mario:
             columns=['step', 'episode', 'epsilon', 'reward', 'loss', 'Q', 'Time delta', 'Datetime'])
 
         self.record_time = time.time()
-
-        if not cfg.init_learning:
-            self.load()
 
         self.init_episode()
 
@@ -218,6 +216,8 @@ class Mario:
         self.log_df = self.log_df.append(
             {column: log for column, log in zip(self.log_df.columns, log_list)}, ignore_index=True)
         self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
+        wandb.log({column: log for column, log in zip(
+            self.log_df.columns, log_list)})
 
     def load(self):
         if self.init_learning:
