@@ -5,6 +5,7 @@ from torch import nn
 from model import MarioNet
 from collections import deque
 
+
 class Mario:
     def __init__(self, cfg, action_dim, save_dir):
         self.action_dim = action_dim
@@ -13,7 +14,7 @@ class Mario:
 
         self.use_cuda = torch.cuda.is_available()
 
-        self.net = MarioNet(self.state_dim, self.action_dim).float()
+        self.net = MarioNet(cfg, self.state_dim, self.action_dim).float()
         if self.use_cuda:
             self.net = self.net.to(device='cuda')
 
