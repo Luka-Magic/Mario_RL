@@ -51,20 +51,11 @@ class Mario:
         self.sync_every = cfg.sync_every
 
         # log variable
-        self.ep_rewards_plot = save_dir / 'reward_plot.jpg'
-        self.ep_lengths_plot = save_dir / 'length_plot.jpg'
-        self.ep_avg_losses_plot = save_dir / 'loss_plot.jpg'
-        self.ep_avg_qs_plot = save_dir / 'q_plot.jpg'
 
         self.ep_rewards = []
         self.ep_lengths = []
         self.ep_avg_losses = []
         self.ep_avg_qs = []
-
-        self.moving_avg_ep_rewards = []
-        self.moving_avg_ep_lengths = []
-        self.moving_avg_ep_avg_losses = []
-        self.moving_avg_ep_avg_qs = []
 
         self.log_df = pd.DataFrame(
             columns=['step', 'episode', 'epsilon', 'reward', 'loss', 'Q', 'Time delta', 'Datetime'])
@@ -204,10 +195,6 @@ class Mario:
         mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
         mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)
         mean_ep_q = np.round(np.mean(self.ep_avg_qs[-100:]), 3)
-        self.moving_avg_ep_rewards.append(mean_ep_reward)
-        self.moving_avg_ep_lengths.append(mean_ep_length)
-        self.moving_avg_ep_avg_losses.append(mean_ep_loss)
-        self.moving_avg_ep_avg_qs.append(mean_ep_q)
         last_record_time = self.record_time
         self.record_time = time.time()
         time_since_last_record = np.round(
@@ -232,11 +219,6 @@ class Mario:
             {column: log for column, log in zip(self.log_df.columns, log_list)}, ignore_index=True)
         self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
 
-        for metric in ['ep_rewards', 'ep_lengths', 'ep_avg_losses', 'ep_avg_qs']:
-            plt.plot(getattr(self, f'moving_avg_{metric}'))
-            plt.savefig(getattr(self, f'{metric}_plot'))
-            plt.clf()
-
     def load(self):
         if self.init_learning:
             return 0
@@ -249,7 +231,7 @@ class Mario:
         self.log_df = pd.read_csv(self.save_dir / 'log.csv')
         # logをparamに移行
         self.exploration_rate = self.log_df['epsilon'].values[-1]
-        self.curr_step = self.log_df['epsilon'].values[-1]
+        self.curr_step = self.log_df['step'].values[-1]
         init_episode = self.log_df['episode'].values[-1]
         print(f'Start from episode: {init_episode}')
         return init_episode

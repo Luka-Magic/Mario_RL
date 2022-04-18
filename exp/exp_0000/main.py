@@ -26,7 +26,6 @@ def main(cfg: DictConfig):
     env = all_wrapper(env, cfg)
 
     # エージェント
-    # load_state_dict
     mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
     init_episode = mario.load()
 
@@ -44,7 +43,8 @@ def main(cfg: DictConfig):
                 break
         mario.log_episode(episode)
 
-        if episode % cfg.save_interval == 0:
+        if episode != 0 and episode % cfg.save_interval == 0:
+        # if episode % cfg.save_interval == 0:
             mario.save()
 
 
