@@ -4,6 +4,10 @@ import torch
 from torch import nn
 from model import MarioNet
 from collections import deque
+import pandas as pd
+import pickle
+import time
+import matplotlib.pyplot as plt
 
 
 class Mario:
@@ -37,6 +41,29 @@ class Mario:
         self.burnin = cfg.burnin
         self.learn_every = cfg.learn_every
         self.sync_every = cfg.sync_every
+
+        # log
+        self.ep_rewards_plot = save_dir / 'reward_plot.jpg'
+        self.ep_lengths_plot = save_dir / 'length_plot.jpg'
+        self.ep_avg_losses_plot = save_dir / 'loss_plot.jpg'
+        self.ep_avg_qs_plot = save_dir / 'q_plot.jpg'
+
+        self.episode_rewards = []
+        self.episode_length = []
+        self.episode_loss = []
+        self.episode_q = []
+
+        self.moving_avg_ep_rewards = []
+        self.moving_avg_ep_lengths = []
+        self.moving_avg_ep_avg_losses = []
+        self.moving_avg_ep_avg_qs = []
+
+        self.log_df = pd.DataFrame(
+            columns=['step', 'episode', 'epsilon', 'reward', 'loss', 'Q', 'Time delta'])
+
+        self.init_episode()
+
+        self.record_time = time.time()
 
     def action(self, state):
         if np.random.rand() < self.exploration_rate:
@@ -108,12 +135,37 @@ class Mario:
     def sync_Q_target(self):
         self.net.target.load_state_dict(self.net.online.state_dict())
 
-    def save(self):
+    def save(self, episode, exploration_rate):
         save_path = (self.save_dir / f'mario_net.pth')
+        # memoryをsave
+        with open(self.save_dir / 'memory.pkl', 'wb') as f:
+            pickle.dump(self.memory, f)
+        # modelをsave
         torch.save(
             dict(model=self.net.state_dict(),
                  exploration_rate=self.exploration_rate), save_path
         )
+        # record
+        mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
+        mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
+        mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)
+        mean_ep_q = np.round(np.mean(self.ep_avg_qs[-100:]), 3)
+        self.moving_avg_ep_rewards.append(mean_ep_reward)
+        self.moving_avg_ep_lengths.append(mean_ep_length)
+        self.moving_avg_ep_avg_losses.append(mean_ep_loss)
+        self.moving_avg_ep_avg_qs.append(mean_ep_q)
+        last_record_time = self.record_time
+        self.record_time = time.time()
+        time_since_last_record = np.round(
+            self.record_time - last_record_time, 3)
+
+        self.log_df.append([self.curr_step, episode,
+                            exploration_rate, mean_ep_reward, mean_ep_loss, mean_ep_q, time_since_last_record])
+        self.log_df.to_csv(self.save_dir / 'log.csv', index=False)
+        for metric in ['ep_rewards', 'ep_lengths', 'ep_avg_losses', 'ep_avg_qs']:
+            plt.plot(getattr(self, f'moving_avg_{metric}'))
+            plt.savefig(getattr(self, f'{metric}_plot'))
+            plt.clf()
 
     def learn(self):
         if self.curr_step % self.sync_every == 0:
@@ -131,4 +183,31 @@ class Mario:
 
         loss = self.update_Q_online(td_est, td_tgt)
 
-        return (td_est.mean().item(), loss)
+        self.curr_ep_reward += reward
+        self.curr_ep_length += 1
+        if loss:
+            self.curr_ep_loss += loss
+            self.curr_ep_q += td_est.mean().item()
+            self.curr_ep_loss_length += 1
+
+    def init_episode(self):
+        self.curr_ep_reward = 0.0
+        self.curr_ep_length = 0
+        self.curr_ep_loss = 0.0
+        self.curr_ep_q = 0.0
+        self.curr_ep_loss_length = 0
+
+    def log_episode(self):
+        self.ep_rewards.append(self.curr_ep_reward)
+        self.ep_lengths.append(self.curr_ep_length)
+        if self.curr_ep_loss_length == 0:
+            ep_avg_loss = 0
+            ep_avg_q = 0
+        else:
+            ep_avg_loss = np.round(self.curr_ep_loss /
+                                   self.curr_ep_loss_length, 5)
+            ep_avg_q = np.round(self.curr_ep_q / self.curr_ep_loss_length, 5)
+        self.ep_avg_losses.append(ep_avg_loss)
+        self.ep_avg_qs.append(ep_avg_q)
+
+        self.init_episode()

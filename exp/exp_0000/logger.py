@@ -30,7 +30,7 @@ class MetricLogger:
 
         self.record_time = time.time()
 
-    def log_step(self, reward, loss, q):  # ステップ単位でカウントする (reward, loss, q)
+    def log_step(self, reward, loss, q):
         self.curr_ep_reward += reward
         self.curr_ep_length += 1
         if loss:
@@ -38,7 +38,7 @@ class MetricLogger:
             self.curr_ep_q += q
             self.curr_ep_loss_length += 1
 
-    def log_episode(self):  # episode毎に報酬の長さとloss, qの平均を記録
+    def log_episode(self):
         self.ep_rewards.append(self.curr_ep_reward)
         self.ep_lengths.append(self.curr_ep_length)
         if self.curr_ep_loss_length == 0:
@@ -53,14 +53,14 @@ class MetricLogger:
 
         self.init_episode()
 
-    def init_episode(self):  # 初期化
+    def init_episode(self):
         self.curr_ep_reward = 0.0
         self.curr_ep_length = 0
         self.curr_ep_loss = 0.0
         self.curr_ep_q = 0.0
         self.curr_ep_loss_length = 0
 
-    def record(self, episode, epsilon, step):  # 報酬や長さ、loss, qの移動平均を算出。
+    def record(self, episode, epsilon, step):
         mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
         mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
         mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)

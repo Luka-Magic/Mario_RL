@@ -33,8 +33,8 @@ def main(cfg: DictConfig):
     # エージェント
     # load_state_dict
     mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
-    if not cfg.init_learning:
-        pass
+    # if not cfg.init_learning:
+    #     pass
 
     # ログ
     # loadできたら
@@ -58,7 +58,7 @@ def main(cfg: DictConfig):
                 break
         logger.log_episode()
 
-        if episode % cfg.save_interval == 0:
+        if episode != 0 and episode % cfg.save_interval == 0:
             mario.save()
             logger.record(episode=episode,
                           epsilon=mario.exploration_rate, step=mario.curr_step)
