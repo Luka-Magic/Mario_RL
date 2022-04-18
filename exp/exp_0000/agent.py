@@ -114,7 +114,6 @@ class Mario:
             dict(model=self.net.state_dict(),
                  exploration_rate=self.exploration_rate), save_path
         )
-        print(f'MarioNet saved to {save_path} at step {self.curr_step}')
 
     def learn(self):
         if self.curr_step % self.sync_every == 0:

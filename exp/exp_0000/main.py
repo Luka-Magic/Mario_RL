@@ -18,6 +18,7 @@ from agent import Mario
 # ログ
 from logger import MetricLogger
 
+
 @hydra.main(config_path='config', config_name='config')
 def main(cfg: DictConfig):
     # 設定
@@ -28,7 +29,7 @@ def main(cfg: DictConfig):
     # 環境
     env = gym_super_mario_bros.make(cfg.environment)
     env = all_wrapper(env, cfg)
- 
+
     # エージェント
     # load_state_dict
     mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
@@ -57,8 +58,10 @@ def main(cfg: DictConfig):
                 break
         logger.log_episode()
         if episode % cfg.save_interval == 0:
+            mario.save()
             logger.record(episode=episode,
                           epsilon=mario.exploration_rate, step=mario.curr_step)
+
 
 if __name__ == '__main__':
     main()
