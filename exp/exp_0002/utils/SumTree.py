@@ -29,6 +29,9 @@ class SumTree:
         else:
             return self._retrieve(right, s-self.tree[left])
 
+    def max(self):
+        return self.tree[self.index_leaf_start:].max()
+
     def total(self):
         return self.tree[0]
 
