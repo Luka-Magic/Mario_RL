@@ -37,7 +37,7 @@ def main(cfg: DictConfig):
         while True:
             action = mario.action(state)
             next_state, reward, done, info = env.step(action)
-            mario.cache(state, next_state, action, reward, done)
+            mario.push(state, next_state, action, reward, done)
             mario.learn()
             state = next_state
 

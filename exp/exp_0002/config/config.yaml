@@ -1,5 +1,5 @@
 ######   BASIC   ###############################
-init_learning: False
+init_learning: True
 wandb_project: RL_SMB
 
 environment: 'SuperMarioBros-1-1-v1'
@@ -12,6 +12,11 @@ state_skip: 4
 
 episodes: 40000
 batch_size: 32
+compress: False
+priority_experience_reply: True
+priority_epsilon: 0.0001
+priority_alpha: 0.6
+
 save_interval: 100
 memory_length: 50000
 

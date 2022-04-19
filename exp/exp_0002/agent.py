@@ -4,12 +4,12 @@ import torch
 from torch import nn
 from torch.cuda.amp import autocast, GradScaler
 from model import MarioNet
-from collections import deque
+from utils.SumTree import SumTree
+from collections import deque, namedtuple
 import pandas as pd
 import pickle
 import time
 import datetime
-import matplotlib.pyplot as plt
 import wandb
 import zlib
 
@@ -27,6 +27,8 @@ class Mario:
         self.restart_steps = 0
         self.restart_episodes = 0
         self.save_every = cfg.save_interval
+        self.Transition = namedtuple('Transition',
+                                ('state', 'next_state', 'action', 'reward', 'done'))
 
         # model
         self.state_dim = (cfg.state_channel, cfg.state_height, cfg.state_width)
@@ -42,6 +44,8 @@ class Mario:
         # memory
         self.memory = deque(maxlen=cfg.memory_length)
         self.batch_size = cfg.batch_size
+        self.priority_tree = SumTree(cfg.memory_length)
+        self.compress = cfg.compress
 
         # learn
         self.gamma = cfg.gamma
@@ -82,7 +86,7 @@ class Mario:
         return action_idx
 
     # memory
-    def cache(self, state, next_state, action, reward, done):
+    def push(self, state, next_state, action, reward, done):
         state = state.__array__()
         next_state = next_state.__array__()
 
@@ -103,17 +107,45 @@ class Mario:
             action = torch.tensor([action])
             reward = torch.tensor([reward])
             done = torch.tensor([done])
-        exp = (state, next_state, action, reward, done,)
-        exp = zlib.compress(pickle.dumps(exp))
-        self.memory.append(exp)
+        exp = (state, next_state, action.squeeze(), reward.squeeze(), done.squeeze(),)
 
-    def recall(self):
-        indices = np.random.choice(
-            np.arange(len(self.memory)), replace=False, size=self.batch_size)
-        batch = [pickle.loads(zlib.decompress(self.memory[idx]))
-                 for idx in indices]
-        state, next_state, action, reward, done = map(torch.stack, zip(*batch))
-        return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
+        # memory compress
+        if self.compress:
+            exp = zlib.compress(pickle.dumps(exp))
+        
+        # priority experience reply
+        if self.priority_experience_reply:
+            priority = self.priority_tree.max()
+            if priority <= 0:
+                priority = 1
+            self.priority_tree.add(priority, exp)
+        else:
+            self.memory.append(exp)
+
+    def sample(self):
+        # segment tree sample
+        batch = []
+        indices = []
+        # if self.priority_experience_reply:
+        for rand in np.random.uniform(0, self.priority_tree.total(), self.batch_size):
+            (idx, _, memory) = self.priority_tree.get(rand)
+            if self.compress:
+                batch.append(pickle.loads(zlib.decompress(self.memory)))
+            else:
+                batch.append(memory)
+            indices.append(idx)
+        
+        # memory decompress
+        # if self.compress:
+        #     indices = np.random.choice(
+        #         np.arange(len(self.memory)), replace=False, size=self.batch_size)
+        #     batch = [pickle.loads(zlib.decompress(self.memory[idx]))
+        #              for idx in indices]
+        # else:
+        #     batch = random.sample(self.memory, self.batch_size)
+        
+        transaction = self.Transition(*map(torch.stack, zip(*batch)))
+        return (indices, transaction)
 
     def td_estimate(self, state, action):
         current_Q = self.net(state, model='online')[
@@ -150,11 +182,17 @@ class Mario:
             return None, None
         if self.curr_step % self.learn_every != 0:
             return None, None
-        state, next_state, action, reward, done = self.recall()
-        td_est = self.td_estimate(state, action)
-        td_tgt = self.td_target(reward, next_state, done)
+        
+        indices, transaction = self.sample()
+        td_est = self.td_estimate(transaction.state, transaction.action)
+        td_tgt = self.td_target(transaction.reward, transaction.next_state, transaction.done)
+        priority = (td_error + self.priority_epsilon) ** self.priority_alpha
         loss = self.update_Q_online(td_est, td_tgt)
 
+        if (indices != None):
+            for i, (td_est_i, td_tgt_i) in enumerate(zip(td_est, td_tgt)):
+                td_error = abs(td_est_i.item() - td_tgt_i.item())
+                self.priority_tree.update(indices[i], priority)
         if loss:
             self.curr_ep_loss += loss
             self.curr_ep_q += td_est.mean().item()
