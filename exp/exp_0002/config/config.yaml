@@ -13,13 +13,13 @@ state_skip: 4
 
 episodes: 40000
 batch_size: 32
-memory_compress: True
+memory_compress: False
 priority_experience_reply: True
 priority_epsilon: 0.0001
 priority_alpha: 0.6
 
 save_interval: 100
-memory_length: 5000
+memory_length: 50000
 
 ######   Leaning   ###############################
 lr: 0.00025
@@ -27,9 +27,9 @@ optimizer: Adam
 loss_fn: SmoothL1Loss
 
 gamma: 0.9
-burnin: 3000
+burnin: 10000
 learn_every: 3
-sync_every: 3000
+sync_every: 10000
 
 exploration_rate: 1
 exploration_rate_decay: 0.99999975
