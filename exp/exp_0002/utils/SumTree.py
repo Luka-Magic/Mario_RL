@@ -8,6 +8,7 @@ class SumTree:
         self.capacity = capacity
         self.tree = numpy.zeros(2*capacity - 1)
         self.data = numpy.zeros(capacity, dtype=object)
+        self.index_leaf_start = capacity - 1
 
     def _propagate(self, idx, change):
         parent = (idx - 1) // 2
