@@ -160,22 +160,32 @@ class Mario:
         self.curr_ep_loss = 0.0
         self.curr_ep_q = 0.0
         self.curr_ep_loss_length = 0
+        self.curr_ep_time = time.time()
 
-    def log_episode(self, episode):
+    def log_episode(self, episode, info):
         self.episode = episode
+        last_time = time.time()
+        episode_time = last_time - self.curr_ep_time
         if self.curr_ep_loss_length == 0:
             ep_avg_loss = 0
             ep_avg_q = 0
+            ep_step_per_second = 0
         else:
             ep_avg_loss = self.curr_ep_loss / self.curr_ep_loss_length
             ep_avg_q = self.curr_ep_q / self.curr_ep_loss_length
+            ep_step_per_second = self.curr_ep_loss_length / episode_time
         wandb.log(dict(
             episode=episode,
             step=self.curr_step,
+            epsilon=self.exploration_rate,
+            step_per_second=ep_step_per_second,
             reward=self.curr_ep_reward,
             length=self.curr_ep_length,
             average_loss=ep_avg_loss,
-            average_q=ep_avg_q
+            average_q=ep_avg_q,
+            dead_or_alive=int(info['flag_get']),
+            x_pos=int(info['x_pos']),
+            time=int(info['time'])
         ))
         self.init_episode()
 
