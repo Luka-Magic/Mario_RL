@@ -19,9 +19,10 @@ def main(cfg: DictConfig):
     save_dir.mkdir(exist_ok=True)
 
     # wandb
-    wandb.login()
-    wandb.init(project=cfg.wandb_project, entity='luka-magic',
-               name=os.getcwd().split('/')[-4], config=cfg)
+    if cfg.wandb:
+        wandb.login()
+        wandb.init(project=cfg.wandb_project, entity='luka-magic',
+                   name=os.getcwd().split('/')[-4], config=cfg)
     
     # 環境
     env = gym_super_mario_bros.make(cfg.environment)
