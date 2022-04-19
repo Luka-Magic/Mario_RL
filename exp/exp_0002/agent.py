@@ -63,9 +63,7 @@ class Mario:
         self.burnin = cfg.burnin
         self.learn_every = cfg.learn_every
         self.sync_every = cfg.sync_every
-
-        # log variable
-
+        
         self.init_episode()
 
     # exploration

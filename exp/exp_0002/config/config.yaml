@@ -13,7 +13,7 @@ state_skip: 4
 
 episodes: 40000
 batch_size: 32
-compress: False
+memory_compress: False
 priority_experience_reply: False
 priority_epsilon: 0.0001
 priority_alpha: 0.6
