@@ -46,7 +46,7 @@ def main(cfg: DictConfig):
 
             if done or info['flag_get']:
                 break
-        mario.log_episode(episode)
+        mario.log_episode(episode, info)
 
         if episode != 0 and episode != mario.restart_episodes and episode % cfg.save_interval == 0:
             mario.save()
