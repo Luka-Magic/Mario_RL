@@ -47,6 +47,8 @@ class Mario:
         self.priority_tree = SumTree(cfg.memory_length)
         self.compress = cfg.compress
         self.priority_experience_reply = cfg.priority_experience_reply
+        self.priority_alpha = cfg.priority_alpha
+        self.priority_epsilon = cfg.priority_epsilon
 
         # learn
         self.gamma = cfg.gamma
@@ -178,6 +180,7 @@ class Mario:
         self.net.target.load_state_dict(self.net.online.state_dict())
 
     def learn(self):
+        # check step num
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step < self.burnin + self.restart_steps:
@@ -185,17 +188,23 @@ class Mario:
         if self.curr_step % self.learn_every != 0:
             return None, None
 
+        # sample
         indices, transaction = self.sample()
+
+        # learn
         td_est = self.td_estimate(transaction.state, transaction.action)
         td_tgt = self.td_target(
             transaction.reward, transaction.next_state, transaction.done)
-        priority = (td_error + self.priority_epsilon) ** self.priority_alpha
         loss = self.update_Q_online(td_est, td_tgt)
 
+        # priority experience reply
         if (indices != None):
             for i, (td_est_i, td_tgt_i) in enumerate(zip(td_est, td_tgt)):
                 td_error = abs(td_est_i.item() - td_tgt_i.item())
+                priority = (
+                    td_error + self.priority_epsilon) ** self.priority_alpha
                 self.priority_tree.update(indices[i], priority)
+        # log
         if loss:
             self.curr_ep_loss += loss
             self.curr_ep_q += td_est.mean().item()
