@@ -46,6 +46,7 @@ class Mario:
         self.batch_size = cfg.batch_size
         self.priority_tree = SumTree(cfg.memory_length)
         self.compress = cfg.compress
+        self.priority_experience_reply = cfg.priority_experience_reply
 
         # learn
         self.gamma = cfg.gamma
