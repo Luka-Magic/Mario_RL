@@ -42,11 +42,13 @@ class Mario:
         self.exploration_rate_min = cfg.exploration_rate_min
 
         # memory
-        # self.memory = deque(maxlen=cfg.memory_length)
         self.batch_size = cfg.batch_size
-        self.priority_tree = SumTree(cfg.memory_length)
-        self.compress = cfg.compress
+        self.memory_compress = cfg.memory_compress
         self.priority_experience_reply = cfg.priority_experience_reply
+        if self.priority_experience_reply:
+            self.memory = SumTree(cfg.memory_length)
+        else:
+            self.memory = deque(maxlen=cfg.memory_length)
         self.priority_alpha = cfg.priority_alpha
         self.priority_epsilon = cfg.priority_epsilon
 
@@ -114,39 +116,34 @@ class Mario:
                reward.squeeze(), done.squeeze(),)
 
         # memory compress
-        if self.compress:
+        if self.memory_compress:
             exp = zlib.compress(pickle.dumps(exp))
 
         # priority experience reply
         if self.priority_experience_reply:
-            priority = self.priority_tree.max()
+            priority = self.memory.max()
             if priority <= 0:
                 priority = 1
-            self.priority_tree.add(priority, exp)
+            self.memory.add(priority, exp)
         else:
             self.memory.append(exp)
 
     def sample(self):
-        # segment tree sample
         batch = []
         indices = []
-        # if self.priority_experience_reply:
-        for rand in np.random.uniform(0, self.priority_tree.total(), self.batch_size):
-            (idx, _, memory) = self.priority_tree.get(rand)
-            if self.compress:
-                batch.append(pickle.loads(zlib.decompress(memory)))
+        for rand in np.random.uniform(0, self.memory.total(), self.batch_size):
+            # priority experience reply
+            if self.priority_experience_reply:
+                idx, _, memory = self.memory.get(rand)
+            else:
+                idx, memory = None, self.memory[idx]
+
+            # decompress
+            if self.memory_compress:
+                memory = pickle.loads(zlib.decompress(memory))
             else:
                 batch.append(memory)
             indices.append(idx)
-
-        # memory decompress
-        # if self.compress:
-        #     indices = np.random.choice(
-        #         np.arange(len(self.memory)), replace=False, size=self.batch_size)
-        #     batch = [pickle.loads(zlib.decompress(self.memory[idx]))
-        #              for idx in indices]
-        # else:
-        #     batch = random.sample(self.memory, self.batch_size)
 
         transaction = self.Transition(*map(torch.stack, zip(*batch)))
         return (indices, transaction)
@@ -198,12 +195,13 @@ class Mario:
         loss = self.update_Q_online(td_est, td_tgt)
 
         # priority experience reply
-        if (indices != None):
-            for i, (td_est_i, td_tgt_i) in enumerate(zip(td_est, td_tgt)):
-                td_error = abs(td_est_i.item() - td_tgt_i.item())
-                priority = (
-                    td_error + self.priority_epsilon) ** self.priority_alpha
-                self.priority_tree.update(indices[i], priority)
+        if self.priority_experience_reply:
+            if (indices != None):
+                for i, (td_est_i, td_tgt_i) in enumerate(zip(td_est, td_tgt)):
+                    td_error = abs(td_est_i.item() - td_tgt_i.item())
+                    priority = (
+                        td_error + self.priority_epsilon) ** self.priority_alpha
+                    self.memory.update(indices[i], priority)
         # log
         if loss:
             self.curr_ep_loss += loss
