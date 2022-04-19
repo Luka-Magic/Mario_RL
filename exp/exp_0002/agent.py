@@ -28,7 +28,7 @@ class Mario:
         self.restart_episodes = 0
         self.save_every = cfg.save_interval
         self.Transition = namedtuple('Transition',
-                                ('state', 'next_state', 'action', 'reward', 'done'))
+                                     ('state', 'next_state', 'action', 'reward', 'done'))
 
         # model
         self.state_dim = (cfg.state_channel, cfg.state_height, cfg.state_width)
@@ -42,7 +42,7 @@ class Mario:
         self.exploration_rate_min = cfg.exploration_rate_min
 
         # memory
-        self.memory = deque(maxlen=cfg.memory_length)
+        # self.memory = deque(maxlen=cfg.memory_length)
         self.batch_size = cfg.batch_size
         self.priority_tree = SumTree(cfg.memory_length)
         self.compress = cfg.compress
@@ -108,12 +108,13 @@ class Mario:
             action = torch.tensor([action])
             reward = torch.tensor([reward])
             done = torch.tensor([done])
-        exp = (state, next_state, action.squeeze(), reward.squeeze(), done.squeeze(),)
+        exp = (state, next_state, action.squeeze(),
+               reward.squeeze(), done.squeeze(),)
 
         # memory compress
         if self.compress:
             exp = zlib.compress(pickle.dumps(exp))
-        
+
         # priority experience reply
         if self.priority_experience_reply:
             priority = self.priority_tree.max()
@@ -131,11 +132,11 @@ class Mario:
         for rand in np.random.uniform(0, self.priority_tree.total(), self.batch_size):
             (idx, _, memory) = self.priority_tree.get(rand)
             if self.compress:
-                batch.append(pickle.loads(zlib.decompress(self.memory)))
+                batch.append(pickle.loads(zlib.decompress(memory)))
             else:
                 batch.append(memory)
             indices.append(idx)
-        
+
         # memory decompress
         # if self.compress:
         #     indices = np.random.choice(
@@ -144,7 +145,7 @@ class Mario:
         #              for idx in indices]
         # else:
         #     batch = random.sample(self.memory, self.batch_size)
-        
+
         transaction = self.Transition(*map(torch.stack, zip(*batch)))
         return (indices, transaction)
 
@@ -183,10 +184,11 @@ class Mario:
             return None, None
         if self.curr_step % self.learn_every != 0:
             return None, None
-        
+
         indices, transaction = self.sample()
         td_est = self.td_estimate(transaction.state, transaction.action)
-        td_tgt = self.td_target(transaction.reward, transaction.next_state, transaction.done)
+        td_tgt = self.td_target(
+            transaction.reward, transaction.next_state, transaction.done)
         priority = (td_error + self.priority_epsilon) ** self.priority_alpha
         loss = self.update_Q_online(td_est, td_tgt)
 
