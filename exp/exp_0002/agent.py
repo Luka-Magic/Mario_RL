@@ -63,7 +63,7 @@ class Mario:
         self.burnin = cfg.burnin
         self.learn_every = cfg.learn_every
         self.sync_every = cfg.sync_every
-        
+
         self.init_episode()
 
     # exploration
@@ -130,18 +130,19 @@ class Mario:
     def sample(self):
         batch = []
         indices = []
-        for rand in np.random.uniform(0, self.memory.total(), self.batch_size):
+        len_memory = self.memory.total() if self.priority_experience_reply else len(
+            self.memory)
+        for rand in np.random.uniform(0, len_memory, self.batch_size):
             # priority experience reply
             if self.priority_experience_reply:
                 idx, _, memory = self.memory.get(rand)
             else:
-                idx, memory = None, self.memory[idx]
+                idx, memory = None, self.memory[rand]
 
             # decompress
             if self.memory_compress:
                 memory = pickle.loads(zlib.decompress(memory))
-            else:
-                batch.append(memory)
+            batch.append(memory)
             indices.append(idx)
 
         transaction = self.Transition(*map(torch.stack, zip(*batch)))
