@@ -128,22 +128,26 @@ class Mario:
             self.memory.append(exp)
 
     def sample(self):
-        batch = []
-        indices = []
-        len_memory = self.memory.total() if self.priority_experience_reply else len(
-            self.memory)
-        for rand in np.random.uniform(0, len_memory, self.batch_size):
-            # priority experience reply
-            if self.priority_experience_reply:
+        if self.priority_experience_reply:  # priority experience reply
+            batch = []
+            indices = []
+            for rand in np.random.uniform(0, self.memory.total(), self.batch_size):
                 idx, _, memory = self.memory.get(rand)
-            else:
-                idx, memory = None, self.memory[rand]
-
+                # decompress
+                if self.memory_compress:
+                    memory = pickle.loads(zlib.decompress(memory))
+                batch.append(memory)
+                indices.append(idx)
+        else:
             # decompress
             if self.memory_compress:
-                memory = pickle.loads(zlib.decompress(memory))
-            batch.append(memory)
-            indices.append(idx)
+                indices = np.random.choice(
+                    np.arange(len(self.memory)), replace=False, size=self.batch_size)
+                batch = [pickle.loads(zlib.decompress(self.memory[idx]))
+                         for idx in indices]
+            else:
+                batch = random.sample(self.memory, self.batch_size)
+            indices = None
 
         transaction = self.Transition(*map(torch.stack, zip(*batch)))
         return (indices, transaction)
