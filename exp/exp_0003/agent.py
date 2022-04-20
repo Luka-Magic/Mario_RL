@@ -23,7 +23,6 @@ class Mario:
         # init
         self.wandb = cfg.wandb
         self.init_learning = cfg.init_learning
-        self.use_cuda = torch.cuda.is_available()
         self.curr_step = 0
         self.restart_steps = 0
         self.restart_episodes = 0
@@ -35,15 +34,11 @@ class Mario:
         self.state_dim = (cfg.state_channel, cfg.state_height, cfg.state_width)
 
         self.policy_net = MarioNet(
-            cfg, self.state_dim, self.action_dim).float()
+            cfg, self.state_dim, self.action_dim).float().to('cuda')
         self.target_net = MarioNet(
-            cfg, self.state_dim, self.action_dim).float()
-        self.target_net.load_state_dict(self.policy_net.state_dict())
+            cfg, self.state_dim, self.action_dim).float().to('cuda')
+        self.sync_Q_target()
         self.target_net.eval()
-        # self.
-        if self.use_cuda:
-            self.net = self.net.to(device='cuda')
-
         # exploration
         self.exploration_rate = cfg.exploration_rate
         self.exploration_rate_decay = cfg.exploration_rate_decay
@@ -64,7 +59,8 @@ class Mario:
         self.gamma = cfg.gamma
         self.scaler = GradScaler()
         if cfg.optimizer == 'Adam':
-            self.optimizer = torch.optim.Adam(self.net.parameters(), lr=cfg.lr)
+            self.optimizer = torch.optim.Adam(
+                self.policy_net.parameters(), lr=cfg.lr)
         if cfg.loss_fn == 'SmoothL1Loss':
             self.loss_fn = nn.SmoothL1Loss()
         self.burnin = cfg.burnin
@@ -79,10 +75,7 @@ class Mario:
             action_idx = np.random.randint(self.action_dim)
         else:
             state = state.__array__()
-            if self.use_cuda:
-                state = torch.tensor(state).cuda()
-            else:
-                state = torch.tensor(state)
+            state = torch.tensor(state).cuda()
             state = state.unsqueeze(0)
             with autocast():
                 action_values = self.policy_net(state)
@@ -106,18 +99,12 @@ class Mario:
         self.curr_ep_length += 1
 
         # momory
-        if self.use_cuda:
-            state = torch.tensor(state).cuda()
-            next_state = torch.tensor(next_state).cuda()
-            action = torch.tensor([action]).cuda()
-            reward = torch.tensor([reward]).cuda()
-            done = torch.tensor([done]).cuda()
-        else:
-            state = torch.tensor(state)
-            next_state = torch.tensor(next_state)
-            action = torch.tensor([action])
-            reward = torch.tensor([reward])
-            done = torch.tensor([done])
+        state = torch.tensor(state).cuda()
+        next_state = torch.tensor(next_state).cuda()
+        action = torch.tensor([action]).cuda()
+        reward = torch.tensor([reward]).cuda()
+        done = torch.tensor([done]).cuda()
+
         exp = (state, next_state, action.squeeze(),
                reward.squeeze(), done.squeeze(),)
 
@@ -261,7 +248,7 @@ class Mario:
         save_path = (self.save_dir / f'mario_net.pth')
         # modelをsave
         torch.save(dict(
-            model=self.net.state_dict(),
+            model=self.policy_net.state_dict(),
             exploration_rate=self.exploration_rate,
             step=self.curr_step,
             episode=self.episode
@@ -283,7 +270,8 @@ class Mario:
             return 0
         load_data = torch.load(self.save_dir / 'mario_net.pth')
         # model
-        self.net.load_state_dict(load_data['model'])
+        self.policy_net.load_state_dict(load_data['model'])
+        self.sync_Q_target()
         # log
         self.exploration_rate = load_data['exploration_rate']
         self.curr_step = load_data['step']
