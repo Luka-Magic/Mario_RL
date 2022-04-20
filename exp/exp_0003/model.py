@@ -1,6 +1,7 @@
 from torch import nn
 import copy
 
+
 class MarioNet(nn.Module):
     def __init__(self, cfg, input_dim, output_dim):
         super().__init__()
@@ -33,12 +34,8 @@ class MarioNet(nn.Module):
 
     def forward(self, x):
         x = self.conv(x)
-        x = x.view(x.size[0], -1)
+        x = x.view(x.size(0), -1)
         values = self.v(x)
         advantages = self.a(x)
         q = values + (advantages - advantages.mean(dim=1, keepdims=True))
         return q
-
-
-
-
