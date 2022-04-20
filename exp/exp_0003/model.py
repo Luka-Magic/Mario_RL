@@ -35,7 +35,7 @@ class MarioNet(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         x = x.view(x.size(0), -1)
-        values = self.v(x)
-        advantages = self.a(x)
+        values = self.values(x)
+        advantages = self.advantages(x)
         q = values + (advantages - advantages.mean(dim=1, keepdims=True))
         return q
