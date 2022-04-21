@@ -266,6 +266,12 @@ class Mario:
                 )
             if episode % self.save_model_interval == 0:
                 save_path = (self.save_dir / f'mario_net_{episode}.pth')
+                torch.save(dict(
+                    model=self.policy_net.state_dict(),
+                    exploration_rate=self.exploration_rate,
+                    step=self.curr_step,
+                    episode=self.episode
+                ), save_path)
 
     def load(self):
         if self.init_learning:
