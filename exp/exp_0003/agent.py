@@ -26,7 +26,8 @@ class Mario:
         self.curr_step = 0
         self.restart_steps = 0
         self.restart_episodes = 0
-        self.save_every = cfg.save_interval
+        self.save_interval = cfg.save_interval
+        self.save_model_interval = cfg.save_model_interval
         self.Transition = namedtuple('Transition',
                                      ('state', 'next_state', 'action', 'reward', 'done'))
 
@@ -242,17 +243,22 @@ class Mario:
                 x_pos=int(info['x_pos']),
                 time=int(info['time'])
             ))
+
+        self.save()
         self.init_episode()
 
-    def save(self):
-        save_path = (self.save_dir / f'mario_net.pth')
-        # modelをsave
-        torch.save(dict(
-            model=self.policy_net.state_dict(),
-            exploration_rate=self.exploration_rate,
-            step=self.curr_step,
-            episode=self.episode
-        ), save_path)
+    def save(self, episode):
+        if episode != 0 and episode != self.restart_episodes:
+            if episode % self.save_interval == 0:
+                save_path = (self.save_dir / f'mario_net.pth')
+                torch.save(dict(
+                    model=self.policy_net.state_dict(),
+                    exploration_rate=self.exploration_rate,
+                    step=self.curr_step,
+                    episode=self.episode
+                ), save_path)
+            if episode % self.save_model_interval == 0:
+                save_path = (self.save_dir / f'mario_net_{episode}.pth')
 
         datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         print(
