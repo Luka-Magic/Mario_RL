@@ -257,16 +257,15 @@ class Mario:
                     step=self.curr_step,
                     episode=self.episode
                 ), save_path)
+                datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+                print(
+                    f"Episode {self.episode} - "
+                    f"Step {self.curr_step} - "
+                    f"Epsilon {self.exploration_rate:.3f} - "
+                    f"Time {datetime_now}"
+                )
             if episode % self.save_model_interval == 0:
                 save_path = (self.save_dir / f'mario_net_{episode}.pth')
-
-        datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-        print(
-            f"Episode {self.episode} - "
-            f"Step {self.curr_step} - "
-            f"Epsilon {self.exploration_rate:.3f} - "
-            f"Time {datetime_now}"
-        )
 
     def load(self):
         if self.init_learning:
