@@ -244,7 +244,7 @@ class Mario:
                 time=int(info['time'])
             ))
 
-        self.save()
+        self.save(episode)
         self.init_episode()
 
     def save(self, episode):
