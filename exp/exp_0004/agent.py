@@ -126,9 +126,9 @@ class Mario:
             r = exp_i.reward
             multi_step_reward += r * self.multi_step_gamma ** i
 
-            if exp_i.done or exp_i.next_state is None:  # 行ける？
-                next_state = None
-                break
+            # if exp_i.done or exp_i.next_state is None:  # 行ける？
+            #     next_state = None
+            #     break
         state, action, _, _, _ = self.multi_step_trainsitions.popleft()
         exp = self.Transition(state, action, next_state,
                               multi_step_reward, done)
@@ -206,9 +206,9 @@ class Mario:
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step < self.burnin + self.restart_steps:
-            return None, None
+            return
         if self.curr_step % self.learn_every != 0:
-            return None, None
+            return
 
         # sample
         indices, transaction = self.sample()
