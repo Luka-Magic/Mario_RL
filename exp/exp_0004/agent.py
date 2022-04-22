@@ -76,6 +76,7 @@ class Mario:
         self.sync_every = cfg.sync_every
 
         self.init_episode()
+        self.load()
 
     # exploration
     def action(self, state):
@@ -124,7 +125,7 @@ class Mario:
             exp_i = self.multi_step_trainsitions[i]
             r = exp_i.reward
             multi_step_reward += r * self.multi_step_gamma ** i
-            
+
             if exp_i.done or exp_i.next_state is None:  # 行ける？
                 next_state = None
                 break
@@ -312,4 +313,3 @@ class Mario:
         self.restart_steps = self.curr_step
         self.restart_episodes = load_data['episode']
         print(f'Start from episode: {self.restart_episodes}')
-        return self.restart_episodes

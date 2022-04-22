@@ -23,14 +23,14 @@ def main(cfg: DictConfig):
         wandb.login()
         wandb.init(project=cfg.wandb_project, entity='luka-magic',
                    name=os.getcwd().split('/')[-4], config=cfg)
-    
+
     # 環境
     env = gym_super_mario_bros.make(cfg.environment)
     env = all_wrapper(env, cfg)
 
     # エージェント
     mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
-    init_episode = mario.load()
+    init_episode = mario.restart_episodes
 
     # 学習
     for episode in tqdm(range(init_episode, cfg.episodes)):
