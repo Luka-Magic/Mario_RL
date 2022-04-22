@@ -118,20 +118,17 @@ class Mario:
 
         self.multi_step_trainsitions.append(exp)
         if len(self.multi_step_trainsitions) < self.multi_step_num:
-            return None
-        next_state = exp.next_state
+            return
+        # next_state = exp.next_state
         multi_step_reward = 0
         for i in range(self.multi_step_num):
             exp_i = self.multi_step_trainsitions[i]
             r = exp_i.reward
             multi_step_reward += r * self.multi_step_gamma ** i
 
-            # if exp_i.done or exp_i.next_state is None:  # 行ける？
-            #     next_state = None
-            #     break
         state, action, _, _, _ = self.multi_step_trainsitions.popleft()
-        exp = self.Transition(state, action, next_state,
-                              multi_step_reward, done)
+        exp = self.Transition(state, action, exp.next_state,
+                              multi_step_reward, exp.done)
 
         # memory compress
         if self.memory_compress:
