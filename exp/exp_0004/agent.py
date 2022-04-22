@@ -126,8 +126,8 @@ class Mario:
             r = exp_i.reward
             multi_step_reward += r * self.multi_step_gamma ** i
 
-        state, action, _, _, _ = self.multi_step_trainsitions.popleft()
-        exp = self.Transition(state, action, exp.next_state,
+        state, _, action, _, _ = self.multi_step_trainsitions.popleft()
+        exp = self.Transition(state, exp.next_state, action,
                               multi_step_reward, exp.done)
 
         # memory compress
