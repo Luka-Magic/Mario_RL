@@ -253,7 +253,7 @@ class Mario:
             ep_avg_loss = self.curr_ep_loss / self.curr_ep_loss_length
             ep_avg_q = self.curr_ep_q / self.curr_ep_loss_length
             ep_step_per_second = self.curr_ep_loss_length / episode_time
-        if wandb:
+        if self.wandb:
             wandb.log(dict(
                 episode=episode,
                 step=self.curr_step,
