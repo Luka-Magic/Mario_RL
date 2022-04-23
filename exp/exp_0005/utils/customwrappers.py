@@ -52,7 +52,7 @@ class CustomRecordVideo(gym.Wrapper):
 
     def step(self, action):
         observations, rewards, dones, infos = super().step(action)
-        
+
         dones = bool(dones)
         video = None
         if infos['flag_get']:
@@ -66,7 +66,7 @@ class CustomRecordVideo(gym.Wrapper):
             self.frames.append(frame)
             if dones:
                 video = self.close_video_recorder()
-        
+
         infos['video'] = video
         return observations, rewards, dones, infos
 

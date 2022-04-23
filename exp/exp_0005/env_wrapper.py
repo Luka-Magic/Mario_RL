@@ -3,7 +3,7 @@ import torch
 from torchvision import transforms
 import gym
 from gym.spaces import Box
-from gym.wrappers import FrameStack, RecordVideo
+from gym.wrappers import FrameStack
 from utils.customwrappers import CustomRecordVideo
 
 
