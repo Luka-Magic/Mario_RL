@@ -9,6 +9,7 @@ import gym_super_mario_bros
 from env_wrapper import all_wrapper
 # エージェント
 from agent import Mario
+import warnings
 
 
 @hydra.main(config_path='config', config_name='config')
@@ -17,6 +18,7 @@ def main(cfg: DictConfig):
     save_dir = Path('/'.join(os.getcwd().split('/')
                     [:-6])) / f"outputs/{os.getcwd().split('/')[-4]}"
     save_dir.mkdir(exist_ok=True)
+    warnings.simplefilter('ignore')
 
     # wandb
     if cfg.wandb:
