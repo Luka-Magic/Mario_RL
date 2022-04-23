@@ -5,6 +5,7 @@ import gym
 from gym.spaces import Box
 from gym.wrappers import FrameStack, RecordVideo
 from nes_py.wrappers import JoypadSpace
+from utils import CustomRecordVideo
 
 class SkipFrame(gym.Wrapper):
     def __init__(self, env, skip):
@@ -58,7 +59,7 @@ class ResizeObservation(gym.ObservationWrapper):
         return observation
 
 def all_wrapper(env, cfg, save_dir):
-    env = RecordVideo(env, video_folder=save_dir)
+    env = CustomRecordVideo(env, video_folder=save_dir)
     env = JoypadSpace(env, cfg.actions)
     env = SkipFrame(env, skip=cfg.state_skip)
     env = GrayScaleObservation(env)

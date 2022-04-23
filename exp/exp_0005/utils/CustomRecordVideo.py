@@ -6,8 +6,11 @@ from gym import logger
 from gym.wrappers.monitoring import video_recorder
 
 
-def capped_cubic_video_schedule(episode_id): # 条件
-    return episode_id % 1000 == 0
+def capped_cubic_video_schedule(episode_id):  # 条件
+    if episode_id < 1000:
+        return int(round(episode_id ** (1.0 / 3))) ** 3 == episode_id
+    else:
+        return episode_id % 1000 == 0
 
 
 class RecordVideo(gym.Wrapper):
@@ -15,23 +18,23 @@ class RecordVideo(gym.Wrapper):
         self,
         env,
         video_folder: str,
-        # init_episode = 0,
         episode_trigger: Callable[[int], bool] = None,
         step_trigger: Callable[[int], bool] = None,
         video_length: int = 0,
         name_prefix: str = "rl-video",
     ):
         super().__init__(env)
-				 # 条件設定
+        # 条件設定
         if episode_trigger is None and step_trigger is None:
             episode_trigger = capped_cubic_video_schedule
-        trigger_count = sum(x is not None for x in [episode_trigger, step_trigger])
+        trigger_count = sum(x is not None for x in [
+                            episode_trigger, step_trigger])
         assert trigger_count == 1, "Must specify exactly one trigger"
-				
+
         self.episode_trigger = episode_trigger
         self.step_trigger = step_trigger
         self.video_recorder = None
-				# video_folderを作成
+        # video_folderを作成
         self.video_folder = os.path.abspath(video_folder)
         # Create output folder if needed
         if os.path.isdir(self.video_folder):
@@ -39,54 +42,54 @@ class RecordVideo(gym.Wrapper):
                 f"Overwriting existing videos at {self.video_folder} folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)"
             )
         os.makedirs(self.video_folder, exist_ok=True)
-				
+
         self.name_prefix = name_prefix
         self.step_id = 0
         self.video_length = video_length
-				
+
         self.recording = False
         self.recorded_frames = 0
         self.is_vector_env = getattr(env, "is_vector_env", False)
         self.episode_id = 0
-				
-		# reset
+
+        # reset
     def reset(self, **kwargs):
         observations = super().reset(**kwargs)
         if not self.recording and self._video_enabled():
             self.start_video_recorder()
         return observations
-		
-		# start (reset時にも始める)
+
+        # start (reset時にも始める)
     def start_video_recorder(self):
         self.close_video_recorder()
-				# video nameを付ける
+        # video nameを付ける
         video_name = f"{self.name_prefix}-step-{self.step_id}"
         if self.episode_trigger:
             video_name = f"{self.name_prefix}-episode-{self.episode_id}"
-				
+
         base_path = os.path.join(self.video_folder, video_name)
-				# VideoRecoderに投げる
+        # VideoRecoderに投げる
         self.video_recorder = video_recorder.VideoRecorder(
             env=self.env,
             base_path=base_path,
             metadata={"step_id": self.step_id, "episode_id": self.episode_id},
         )
-				# capture_frameてやつを行う。
+        # capture_frameてやつを行う。
         self.video_recorder.capture_frame()
-				# recorded_framesでvideoの長さを管理？
+        # recorded_framesでvideoの長さを管理？
         self.recorded_frames = 1
         self.recording = True
-				
+
     def _video_enabled(self):
         if self.step_trigger:
             return self.step_trigger(self.step_id)
         else:
             return self.episode_trigger(self.episode_id)
-		
-		# actionが入力されたときの反応
+
+            # actionが入力されたときの反応
     def step(self, action):
         observations, rewards, dones, infos = super().step(action)
-				
+
         # increment steps and episodes
         self.step_id += 1
         if not self.is_vector_env:
@@ -96,7 +99,7 @@ class RecordVideo(gym.Wrapper):
             self.episode_id += 1
 
         if self.recording:
-						# capture_frameてやつを行う。
+            # capture_frameてやつを行う。
             self.video_recorder.capture_frame()
             self.recorded_frames += 1
             if self.video_length > 0:
@@ -111,18 +114,18 @@ class RecordVideo(gym.Wrapper):
 
         elif self._video_enabled():
             self.start_video_recorder()
-				
+
         return observations, rewards, dones, infos
-				
+
     def close_video_recorder(self) -> None:
         if self.recording:
             self.video_recorder.close()
         self.recording = False
         self.recorded_frames = 1
-				
+
     def close(self):
         super().close()
         self.close_video_recorder()
-				
+
     def __del__(self):
         self.close_video_recorder()
