@@ -4,8 +4,8 @@ from torchvision import transforms
 import gym
 from gym.spaces import Box
 from gym.wrappers import FrameStack, RecordVideo
-from nes_py.wrappers import JoypadSpace
 from utils.customwrappers import CustomRecordVideo
+
 
 class SkipFrame(gym.Wrapper):
     def __init__(self, env, skip):
@@ -62,9 +62,9 @@ class ResizeObservation(gym.ObservationWrapper):
         return observation
 
 
-def all_wrapper(env, cfg, save_dir):
-    env = CustomRecordVideo(env, video_folder=save_dir)
-    env = JoypadSpace(env, cfg.actions)
+def all_wrapper(env, cfg, save_dir, init_episode):
+    env = CustomRecordVideo(env, video_folder=save_dir,
+                            init_episode=init_episode)
     env = SkipFrame(env, skip=cfg.state_skip)
     env = GrayScaleObservation(env)
     env = ResizeObservation(env, shape=(cfg.state_height, cfg.state_width))

@@ -17,10 +17,11 @@ class CustomRecordVideo(gym.Wrapper):
         self,
         env,
         video_folder: str,
+        init_episode = 0,
         episode_trigger: Callable[[int], bool] = None,
         step_trigger: Callable[[int], bool] = None,
         video_length: int = 0,
-        name_prefix: str = "rl-video",
+        name_prefix: str = "mario_rl",
     ):
         super().__init__(env)
         # 条件設定
@@ -49,7 +50,7 @@ class CustomRecordVideo(gym.Wrapper):
         self.recording = False
         self.recorded_frames = 0
         self.is_vector_env = getattr(env, "is_vector_env", False)
-        self.episode_id = 0
+        self.episode_id = init_episode
 
         # reset
     def reset(self, **kwargs):
