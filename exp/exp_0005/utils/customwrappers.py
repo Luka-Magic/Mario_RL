@@ -62,7 +62,6 @@ class CustomRecordVideo(gym.Wrapper):
         self.recorded_frames = 0
         self.is_vector_env = getattr(env, "is_vector_env", False)
         self.episode_id = init_episode
-
         self.frames = []
 
     def reset(self, **kwargs):

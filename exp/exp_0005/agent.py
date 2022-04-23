@@ -267,7 +267,8 @@ class Mario:
             time=int(info['time'])
         )
         if info['video'] is not None:
-            print(info['video'].shape)
+            np.save(self.save_dir /
+                    f'video/video_{episode}.npy', info['video'])
             wandb_dict['video'] = wandb.Video(
                 info['video'], fps=30, format='gif')
         if self.wandb:
