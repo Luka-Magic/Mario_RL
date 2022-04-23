@@ -116,8 +116,8 @@ class CustomRecordVideo(gym.Wrapper):
             self.episode_id += 1
 
         if self.recording:
-            # capture_frameてやつを行う。
-            self.frames.append(observations)
+            frame = observations.copy()
+            self.frames.append(frame)
             self.recorded_frames += 1
             if self.video_length > 0:
                 if self.recorded_frames > self.video_length:
