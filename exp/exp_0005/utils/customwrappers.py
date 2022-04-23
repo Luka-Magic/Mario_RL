@@ -17,10 +17,10 @@ from gym import logger
 
 
 def capped_cubic_video_schedule(episode_id):  # 条件
-    if episode_id < 1000:
-        return int(round(episode_id ** (1.0 / 3))) ** 3 == episode_id
-    else:
-        return episode_id % 1000 == 0
+    # if episode_id < 10:
+    #     return int(round(episode_id ** (1.0 / 3))) ** 3 == episode_id
+    # else:
+    return episode_id % 10 == 0
 
 
 class CustomRecordVideo(gym.Wrapper):
@@ -103,7 +103,11 @@ class CustomRecordVideo(gym.Wrapper):
     # actionが入力されたときの反応
     def step(self, action):
         observations, rewards, dones, infos = super().step(action)
+
         video = None
+        if infos['flag_get']:
+            dones = True
+
         # increment steps and episodes
         self.step_id += 1
         if not self.is_vector_env:
@@ -128,17 +132,13 @@ class CustomRecordVideo(gym.Wrapper):
 
         elif self._video_enabled():
             self.start_video_recorder()
-        print(type(infos))
-        print(infos)
         infos['video'] = video
         return observations, rewards, dones, infos
 
     def close_video_recorder(self) -> None:
-        # if self.recording:
-        #     self.video_recorder.close()
-
         self.recording = False
         self.recorded_frames = 1
+        return np.stack(self.frames)
 
     def close(self):
         super().close()

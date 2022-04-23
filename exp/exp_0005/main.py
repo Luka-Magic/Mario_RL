@@ -47,7 +47,7 @@ def main(cfg: DictConfig):
             mario.learn()
             state = next_state
 
-            if done or info['flag_get']:
+            if done:
                 break
         mario.log_episode(episode, info)
 

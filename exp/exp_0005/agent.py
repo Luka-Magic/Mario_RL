@@ -253,21 +253,23 @@ class Mario:
             ep_avg_loss = self.curr_ep_loss / self.curr_ep_loss_length
             ep_avg_q = self.curr_ep_q / self.curr_ep_loss_length
             ep_step_per_second = self.curr_ep_loss_length / episode_time
+        wandb_dict = dict(
+            episode=episode,
+            step=self.curr_step,
+            epsilon=self.exploration_rate,
+            step_per_second=ep_step_per_second,
+            reward=self.curr_ep_reward,
+            length=self.curr_ep_length,
+            average_loss=ep_avg_loss,
+            average_q=ep_avg_q,
+            dead_or_alive=int(info['flag_get']),
+            x_pos=int(info['x_pos']),
+            time=int(info['time'])
+        )
+        if info is not None:
+            wandb_dict['video'] = wandb.Video(info['video'], fps=30)
         if self.wandb:
-            wandb.log(dict(
-                episode=episode,
-                step=self.curr_step,
-                epsilon=self.exploration_rate,
-                step_per_second=ep_step_per_second,
-                reward=self.curr_ep_reward,
-                length=self.curr_ep_length,
-                average_loss=ep_avg_loss,
-                average_q=ep_avg_q,
-                dead_or_alive=int(info['flag_get']),
-                x_pos=int(info['x_pos']),
-                time=int(info['time'])
-            ))
-
+            wandb.log(wandb_dict)
         self.save(episode)
         self.init_episode()
 
