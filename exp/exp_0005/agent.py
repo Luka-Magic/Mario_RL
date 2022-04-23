@@ -267,6 +267,7 @@ class Mario:
             time=int(info['time'])
         )
         if info['video'] is not None:
+            print(info['video'].shape)
             wandb_dict['video'] = wandb.Video(
                 info['video'], fps=30, format='mp4')
         if self.wandb:
