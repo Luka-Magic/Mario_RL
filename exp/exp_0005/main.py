@@ -34,7 +34,7 @@ def main(cfg: DictConfig):
     mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
     init_episode = mario.restart_episodes
     env.episode_id = init_episode
-    print(env.episode_id)
+    print(env.name_prefix)
 
     # 学習
     for episode in tqdm(range(init_episode, cfg.episodes)):
