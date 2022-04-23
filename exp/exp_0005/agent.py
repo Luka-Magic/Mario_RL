@@ -266,8 +266,7 @@ class Mario:
             x_pos=int(info['x_pos']),
             time=int(info['time'])
         )
-        if info is not None:
-            print(info['video'])
+        if info['video'] is not None:
             wandb_dict['video'] = wandb.Video(info['video'], fps=30)
         if self.wandb:
             wandb.log(wandb_dict)
