@@ -32,13 +32,9 @@ def main(cfg: DictConfig):
     env = JoypadSpace(env, cfg.actions)
 
     # エージェント
-    mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
+    mario = Mario(cfg, action_dim=env.action_space.n, video_folder=save_dir / 'video')
     init_episode = mario.restart_episodes
     env = all_wrapper(env, cfg, save_dir, init_episode)
-    # env.episode_id = init_episode
-    # env.name_prefix = 'mario_rl'
-    # print(env.episode_id)
-    # print(env.name_prefix)
 
     # 学習
     for episode in tqdm(range(init_episode, cfg.episodes)):

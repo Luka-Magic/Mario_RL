@@ -62,8 +62,8 @@ class ResizeObservation(gym.ObservationWrapper):
         return observation
 
 
-def all_wrapper(env, cfg, save_dir, init_episode):
-    env = CustomRecordVideo(env, video_folder=save_dir,
+def all_wrapper(env, cfg, video_folder, init_episode):
+    env = CustomRecordVideo(env, video_folder=video_folder,
                             init_episode=init_episode)
     env = SkipFrame(env, skip=cfg.state_skip)
     env = GrayScaleObservation(env)
