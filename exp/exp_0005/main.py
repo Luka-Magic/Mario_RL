@@ -12,7 +12,6 @@ from env_wrapper import all_wrapper
 from agent import Mario
 import warnings
 
-
 @hydra.main(config_path='config', config_name='config')
 def main(cfg: DictConfig):
     # 設定

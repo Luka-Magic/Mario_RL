@@ -125,10 +125,10 @@ class Mario:
             exp_i = self.multi_step_trainsitions[i]
             r = exp_i.reward
             multi_step_reward += r * self.multi_step_gamma ** i
-
             if exp_i.done:
                 break
-
+        
+        multi_step_reward = multi_step_reward.cuda()
         state, _, action, _, _ = self.multi_step_trainsitions.popleft()
         exp = self.Transition(state, exp.next_state, action,
                               multi_step_reward, exp.done)
