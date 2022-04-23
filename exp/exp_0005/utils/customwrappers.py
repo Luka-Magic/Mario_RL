@@ -20,7 +20,6 @@ class CustomRecordVideo(gym.Wrapper):
         init_episode=0,
         episode_trigger: Callable[[int], bool] = None,
         step_trigger: Callable[[int], bool] = None,
-        video_length: int = 0,
     ):
         super().__init__(env)
         # 条件設定
@@ -35,7 +34,6 @@ class CustomRecordVideo(gym.Wrapper):
         self.step_trigger = step_trigger
 
         self.step_id = 0
-        self.video_length = video_length
 
         self.recording = False
         self.recorded_frames = 0
@@ -68,31 +66,26 @@ class CustomRecordVideo(gym.Wrapper):
         video = None
         if infos['flag_get']:
             dones = True
+        print(dones)
+        print(type(dones))
 
         # increment steps and episodes
         self.step_id += 1
         if not self.is_vector_env:
             if dones:
                 self.episode_id += 1
-        elif dones[0]:
+        elif dones:
             self.episode_id += 1
 
         if self.recording:
             frame = observations.copy()
             self.frames.append(frame)
             self.recorded_frames += 1
-            if self.video_length > 0:
-                if self.recorded_frames > self.video_length:
-                    video = self.close_video_recorder()
-            else:
-                if not self.is_vector_env:
-                    if dones:
-                        video = self.close_video_recorder()
-                elif dones[0]:
-                    video = self.close_video_recorder()
-
+            if dones:
+                video = self.close_video_recorder()
         elif self._video_enabled():
             self.start_video_recorder()
+        
         infos['video'] = video
         return observations, rewards, dones, infos
 
