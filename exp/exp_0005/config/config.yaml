@@ -1,0 +1,39 @@
+######   BASIC   ###############################
+init_learning: False
+wandb_project: RL_SMB
+wandb: True
+
+environment: 'SuperMarioBros-1-1-v1'
+actions: [['right'], ['right', 'A']] # 'SIMPLE_MOVEMENT'
+
+state_height: 84
+state_width: 84
+state_channel: 4
+state_skip: 4
+
+episodes: 40000
+batch_size: 32
+memory_compress: False
+priority_experience_reply: True
+priority_epsilon: 0.0001
+priority_alpha: 0.6
+
+save_interval: 100
+memory_length: 50000
+save_model_interval: 5000
+multi_step_num: 3
+multi_step_gamma: 0.9
+
+######   Leaning   ###############################
+lr: 0.00025
+optimizer: Adam
+loss_fn: SmoothL1Loss
+
+gamma: 0.9
+burnin: 10000
+learn_every: 3
+sync_every: 10000
+
+exploration_rate: 1
+exploration_rate_decay: 0.99999975
+exploration_rate_min: 0.1
