@@ -139,9 +139,9 @@ class CustomRecordVideo(gym.Wrapper):
         self.recording = False
         self.recorded_frames = 1
         if len(self.frames):
-            video = np.stack(self.frames)
+            video = np.stack(self.frames).transpose(0, 3, 1, 2)
             print(video.shape)
-            return 
+            return video
         else:
             return None
 

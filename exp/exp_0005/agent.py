@@ -267,7 +267,8 @@ class Mario:
             time=int(info['time'])
         )
         if info['video'] is not None:
-            wandb_dict['video'] = wandb.Video(info['video'], fps=30)
+            wandb_dict['video'] = wandb.Video(
+                info['video'], fps=30, format='mp4')
         if self.wandb:
             wandb.log(wandb_dict)
         self.save(episode)
