@@ -128,7 +128,7 @@ class Mario:
             multi_step_reward += r * self.multi_step_gamma ** i
             if exp_i.done:
                 break
-        
+
         multi_step_reward = multi_step_reward.cuda()
         state, _, action, _, _ = self.multi_step_trainsitions.popleft()
         exp = self.Transition(state, exp.next_state, action,
@@ -269,7 +269,7 @@ class Mario:
         )
         if info['video'] is not None:
             wandb_dict['video'] = wandb.Video(
-                info['video'], fps=self.video_save_fps, format='gif')
+                info['video'], fps=self.video_save_fps, format='mp4')
         if self.wandb:
             wandb.log(wandb_dict)
         self.save(episode)
