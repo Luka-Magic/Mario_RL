@@ -12,8 +12,7 @@ def capped_cubic_video_schedule(episode_id):  # 条件
     else:
         return episode_id % 1000 == 0
 
-
-class RecordVideo(gym.Wrapper):
+class CustomRecordVideo(gym.Wrapper):
     def __init__(
         self,
         env,
