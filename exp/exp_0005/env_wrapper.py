@@ -6,12 +6,10 @@ from gym.spaces import Box
 from gym.wrappers import FrameStack, RecordVideo
 from nes_py.wrappers import JoypadSpace
 
-
 class SkipFrame(gym.Wrapper):
     def __init__(self, env, skip):
         super().__init__(env)
         self._skip = skip
-
     def step(self, action):
         total_reward = 0.0
         done = False
@@ -21,7 +19,6 @@ class SkipFrame(gym.Wrapper):
             if done:
                 break
         return obs, total_reward, done, info
-
 
 class GrayScaleObservation(gym.ObservationWrapper):
     def __init__(self, env):
@@ -40,7 +37,6 @@ class GrayScaleObservation(gym.ObservationWrapper):
         transform = transforms.Grayscale()
         observation = transform(observation)
         return observation
-
 
 class ResizeObservation(gym.ObservationWrapper):
     def __init__(self, env, shape):
@@ -61,13 +57,12 @@ class ResizeObservation(gym.ObservationWrapper):
         observation = transforms_(observation).squeeze(0)
         return observation
 
-
-def all_wrapper(env, cfg, save_dir, init_episode):
-    env = RecordVideo(env, video_folder=save_dir / 'video')
-    env.episode_id = init_episode
+def all_wrapper(env, cfg, save_dir):
+    env = RecordVideo(env, video_folder=save_dir)
     env = JoypadSpace(env, cfg.actions)
     env = SkipFrame(env, skip=cfg.state_skip)
     env = GrayScaleObservation(env)
     env = ResizeObservation(env, shape=(cfg.state_height, cfg.state_width))
     env = FrameStack(env, num_stack=cfg.state_channel)
     return env
+

@@ -26,11 +26,11 @@ def main(cfg: DictConfig):
 
     # 環境
     env = gym_super_mario_bros.make(cfg.environment)
+    env = all_wrapper(env, cfg, save_dir)
 
     # エージェント
     mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
     init_episode = mario.restart_episodes
-    env = all_wrapper(env, cfg, save_dir, init_episode)
 
     # 学習
     for episode in tqdm(range(init_episode, cfg.episodes)):
