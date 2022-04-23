@@ -138,7 +138,10 @@ class CustomRecordVideo(gym.Wrapper):
     def close_video_recorder(self) -> None:
         self.recording = False
         self.recorded_frames = 1
-        return np.stack(self.frames)
+        if len(self.frames):
+            return np.stack(self.frames)
+        else:
+            return None
 
     def close(self):
         super().close()
