@@ -28,6 +28,7 @@ class Mario:
         self.restart_episodes = 0
         self.save_interval = cfg.save_interval
         self.save_model_interval = cfg.save_model_interval
+        self.video_save_fps = cfg.video_save_fps
         self.Transition = namedtuple('Transition',
                                      ('state', 'next_state', 'action', 'reward', 'done'))
 
@@ -268,7 +269,7 @@ class Mario:
         )
         if info['video'] is not None:
             wandb_dict['video'] = wandb.Video(
-                info['video'], fps=30, format='gif')
+                info['video'], fps=self.video_save_fps, format='gif')
         if self.wandb:
             wandb.log(wandb_dict)
         self.save(episode)

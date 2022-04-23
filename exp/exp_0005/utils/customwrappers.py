@@ -8,20 +8,19 @@ import gym
 from gym import logger
 
 
-def capped_cubic_video_schedule(episode_id):  # 条件
-    return episode_id % 100 == 0
+def capped_cubic_video_schedule(episode_id, video_save_interval):  # 条件
+    return episode_id % video_save_interval == 0
 
 
 class CustomRecordVideo(gym.Wrapper):
     def __init__(
         self,
         env,
-        video_folder: str,
+        cfg,
         init_episode=0,
         episode_trigger: Callable[[int], bool] = None,
         step_trigger: Callable[[int], bool] = None,
         video_length: int = 0,
-        name_prefix: str = "mario_rl",
     ):
         super().__init__(env)
         # 条件設定
@@ -31,19 +30,10 @@ class CustomRecordVideo(gym.Wrapper):
                             episode_trigger, step_trigger])
         assert trigger_count == 1, "Must specify exactly one trigger"
 
+        self.video_save_interval = cfg.video_save_interval
         self.episode_trigger = episode_trigger
         self.step_trigger = step_trigger
-        self.video_recorder = None
-        # video_folderを作成
-        self.video_folder = os.path.abspath(video_folder)
-        # Create output folder if needed
-        if os.path.isdir(self.video_folder):
-            logger.warn(
-                f"Overwriting existing videos at {self.video_folder} folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)"
-            )
-        os.makedirs(self.video_folder, exist_ok=True)
 
-        self.name_prefix = name_prefix
         self.step_id = 0
         self.video_length = video_length
 
@@ -69,7 +59,7 @@ class CustomRecordVideo(gym.Wrapper):
         if self.step_trigger:
             return self.step_trigger(self.step_id)
         else:
-            return self.episode_trigger(self.episode_id)
+            return self.episode_trigger(self.episode_id, self.video_save_interval)
 
     # actionが入力されたときの反応
     def step(self, action):

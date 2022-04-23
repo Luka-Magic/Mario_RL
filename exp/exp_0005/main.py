@@ -12,6 +12,7 @@ from env_wrapper import all_wrapper
 from agent import Mario
 import warnings
 
+
 @hydra.main(config_path='config', config_name='config')
 def main(cfg: DictConfig):
     # 設定
@@ -33,8 +34,7 @@ def main(cfg: DictConfig):
     # エージェント
     mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
     init_episode = mario.restart_episodes
-    env = all_wrapper(env, cfg, video_folder=save_dir /
-                      'video', init_episode=init_episode)
+    env = all_wrapper(env, cfg, init_episode=init_episode)
 
     # 学習
     for episode in tqdm(range(init_episode, cfg.episodes)):

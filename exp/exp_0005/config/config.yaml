@@ -21,6 +21,8 @@ priority_alpha: 0.6
 save_interval: 100
 memory_length: 50000
 save_model_interval: 5000
+video_save_interval: 100
+video_save_fps: 15
 multi_step_num: 1
 multi_step_gamma: 0.9
 
