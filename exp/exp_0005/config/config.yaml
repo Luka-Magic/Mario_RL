@@ -1,5 +1,5 @@
 ######   BASIC   ###############################
-init_learning: False
+init_learning: True
 wandb_project: RL_SMB
 wandb: True
 
