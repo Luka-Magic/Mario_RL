@@ -28,6 +28,7 @@ class Mario:
         self.restart_episodes = 0
         self.save_interval = cfg.save_interval
         self.save_model_interval = cfg.save_model_interval
+        self.video_save_fps = cfg.video_save_fps
         self.Transition = namedtuple('Transition',
                                      ('state', 'next_state', 'action', 'reward', 'done'))
 
@@ -116,8 +117,9 @@ class Mario:
         done = torch.tensor([done]).cuda().squeeze()
 
         exp = self.Transition(state, next_state, action, reward, done)
-
         self.multi_step_trainsitions.append(exp)
+
+        # next_state = exp.next_state
         if len(self.multi_step_trainsitions) < self.multi_step_num * self.state_channel:
             return
         multi_step_reward = 0
@@ -128,7 +130,7 @@ class Mario:
 
             if exp_i.done:
                 break
-        for i in range(4):
+        for i in range(self.state_channel):
             if i == 0:
                 state, _, action, _, _ = self.multi_step_trainsitions.popleft()
             else:
@@ -256,21 +258,24 @@ class Mario:
             ep_avg_loss = self.curr_ep_loss / self.curr_ep_loss_length
             ep_avg_q = self.curr_ep_q / self.curr_ep_loss_length
             ep_step_per_second = self.curr_ep_loss_length / episode_time
+        wandb_dict = dict(
+            episode=episode,
+            step=self.curr_step,
+            epsilon=self.exploration_rate,
+            step_per_second=ep_step_per_second,
+            reward=self.curr_ep_reward,
+            length=self.curr_ep_length,
+            average_loss=ep_avg_loss,
+            average_q=ep_avg_q,
+            dead_or_alive=int(info['flag_get']),
+            x_pos=int(info['x_pos']),
+            time=int(info['time'])
+        )
+        if info['video'] is not None:
+            wandb_dict['video'] = wandb.Video(
+                info['video'], fps=self.video_save_fps, format='mp4', caption=f'episode: {episode}')
         if self.wandb:
-            wandb.log(dict(
-                episode=episode,
-                step=self.curr_step,
-                epsilon=self.exploration_rate,
-                step_per_second=ep_step_per_second,
-                reward=self.curr_ep_reward,
-                length=self.curr_ep_length,
-                average_loss=ep_avg_loss,
-                average_q=ep_avg_q,
-                dead_or_alive=int(info['flag_get']),
-                x_pos=int(info['x_pos']),
-                time=int(info['time'])
-            ))
-
+            wandb.log(wandb_dict)
         self.save(episode)
         self.init_episode()
 
