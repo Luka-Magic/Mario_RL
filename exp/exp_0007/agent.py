@@ -135,6 +135,7 @@ class Mario:
                 state, _, action, _, _ = self.multi_step_trainsitions.popleft()
             else:
                 _ = self.multi_step_trainsitions.popleft()
+        print(len(self.multi_step_trainsitions))
         exp = self.Transition(state, exp.next_state, action,
                               multi_step_reward, exp.done)
 
