@@ -134,7 +134,6 @@ class Mario:
         if self.priority_experience_reply:  # priority experience reply
             batch = []
             indices = []
-            ## 補正
             weights = np.empty(self.batch_size, dtype='float32')
             total = self.tree.total()
             beta = self.priority_beta + \
@@ -185,7 +184,7 @@ class Mario:
 
     def update_Q_online(self, td_estimate, td_target, weights):
         if self.priority_use_IS:
-            loss = torch.abs(td_estimate - td_target) * torch.from_numpy(weights).to('cuda')
+            loss = torch.abs(td_estimate - td_target) * torch.from_numpy(weights).mean().to('cuda')
         with autocast():
             loss = self.loss_fn(td_estimate, td_target)
         self.scaler.scale(loss).backward()
