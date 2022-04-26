@@ -118,8 +118,8 @@ class Mario:
 
         exp = self.Transition(state, next_state, action, reward, done)
         self.multi_step_trainsitions.append(exp)
-
         # next_state = exp.next_state
+        
         if len(self.multi_step_trainsitions) < self.multi_step_num * self.state_channel:
             return
         multi_step_reward = 0
