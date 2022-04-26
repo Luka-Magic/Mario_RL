@@ -62,7 +62,7 @@ class Mario:
         self.priority_alpha = cfg.priority_alpha
         self.priority_epsilon = cfg.priority_epsilon
         self.priority_use_IS = cfg.priority_use_IS
-        self.pirority_beta = cfg.priority_beta
+        self.priority_beta = cfg.priority_beta
 
         # learn
         self.gamma = cfg.gamma
