@@ -120,21 +120,18 @@ class Mario:
         self.multi_step_trainsitions.append(exp)
         # next_state = exp.next_state
 
-        if len(self.multi_step_trainsitions) < self.multi_step_num * self.state_channel:
+        multi_step_len = self.multi_step_num * self.state_channel
+        if len(self.multi_step_trainsitions) < multi_step_len:
             return
         multi_step_reward = 0
-        for i in range(0, self.multi_step_num, self.state_channel):
+        for i in range(multi_step_len):
             exp_i = self.multi_step_trainsitions[i]
             r = exp_i.reward
-            multi_step_reward += r * self.multi_step_gamma ** i
-
+            multi_step_reward += r * self.multi_step_gamma ** (i//self.state_channel)
             if exp_i.done:
                 break
-        for i in range(self.state_channel):
-            if i == 0:
-                state, _, action, _, _ = self.multi_step_trainsitions.popleft()
-            else:
-                _ = self.multi_step_trainsitions.popleft()
+        
+        state, _, action, _, _ = self.multi_step_trainsitions.popleft()
         exp = self.Transition(state, exp.next_state, action,
                               multi_step_reward, exp.done)
 

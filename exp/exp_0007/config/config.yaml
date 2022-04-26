@@ -33,7 +33,7 @@ loss_fn: SmoothL1Loss
 
 gamma: 0.9
 burnin: 10000
-learn_every: 3
+learn_every: 1
 sync_every: 10000
 
 exploration_rate: 1
