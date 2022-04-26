@@ -25,9 +25,9 @@ class Mario:
         self.init_learning = cfg.init_learning
         self.curr_step = 0
         self.restart_steps = 0
-        self.restart_episodes = 0 # 学習再開が何episode目から始めるか
-        self.episode = self.restart_episodes # 現在何episode目か
-        self.episodes_num = cfg.episodes # 学習するepisode合計数
+        self.restart_episodes = 0  # 学習再開が何episode目から始めるか
+        self.episode = self.restart_episodes  # 現在何episode目か
+        self.episodes_num = cfg.episodes  # 学習するepisode合計数
         self.save_interval = cfg.save_interval
         self.save_model_interval = cfg.save_model_interval
         self.video_save_fps = cfg.video_save_fps
@@ -135,15 +135,15 @@ class Mario:
             batch = []
             indices = []
             weights = np.empty(self.batch_size, dtype='float32')
-            total = self.tree.total()
+            total = self.memory.total()
             beta = self.priority_beta + \
                 (1 - self.priority_beta) * self.episode / self.episodes_num
-            
+
             for i, rand in enumerate(np.random.uniform(0, self.memory.total(), self.batch_size)):
                 idx, priority, memory = self.memory.get(rand)
-                
-                ### weightを計算 
-                weights[i] = (self.memory_length * priority / total) ** (-beta)                
+
+                # weightを計算
+                weights[i] = (self.memory_length * priority / total) ** (-beta)
 
                 # decompress
                 if self.memory_compress:
@@ -184,7 +184,8 @@ class Mario:
 
     def update_Q_online(self, td_estimate, td_target, weights):
         if self.priority_use_IS:
-            loss = torch.abs(td_estimate - td_target) * torch.from_numpy(weights).mean().to('cuda')
+            loss = torch.abs(td_estimate - td_target) * \
+                torch.from_numpy(weights).mean().to('cuda')
         with autocast():
             loss = self.loss_fn(td_estimate, td_target)
         self.scaler.scale(loss).backward()
