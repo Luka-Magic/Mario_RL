@@ -22,7 +22,6 @@ class SkipFrame(gym.Wrapper):
                 break
         return obs, total_reward, done, info
 
-
 class GrayScaleObservation(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)

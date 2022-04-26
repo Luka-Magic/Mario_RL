@@ -17,14 +17,12 @@ memory_compress: False
 priority_experience_reply: True
 priority_epsilon: 0.0001
 priority_alpha: 0.6
+priority_use_IS: True
+priority_beta: 0.4
 
 save_interval: 100
 memory_length: 50000
 save_model_interval: 5000
-video_save_interval: 100
-video_save_fps: 60
-multi_step_num: 1
-multi_step_gamma: 0.9
 
 ######   Leaning   ###############################
 lr: 0.00025

@@ -25,7 +25,9 @@ class Mario:
         self.init_learning = cfg.init_learning
         self.curr_step = 0
         self.restart_steps = 0
-        self.restart_episodes = 0
+        self.restart_episodes = 0 # 学習再開が何episode目から始めるか
+        self.episode = self.restart_episodes # 現在何episode目か
+        self.episodes_num = cfg.episodes # 学習するepisode合計数
         self.save_interval = cfg.save_interval
         self.save_model_interval = cfg.save_model_interval
         self.video_save_fps = cfg.video_save_fps
@@ -59,11 +61,8 @@ class Mario:
             self.memory = deque(maxlen=self.memory_length)
         self.priority_alpha = cfg.priority_alpha
         self.priority_epsilon = cfg.priority_epsilon
-
-        self.multi_step_trainsitions = deque()
-        self.multi_step_num = cfg.multi_step_num
-        self.multi_step_gamma = cfg.multi_step_gamma
-        self.state_channel = cfg.state_channel
+        self.priority_use_IS = cfg.priority_use_IS
+        self.pirority_beta = cfg.priority_beta
 
         # learn
         self.gamma = cfg.gamma
@@ -117,26 +116,6 @@ class Mario:
         done = torch.tensor([done]).cuda().squeeze()
 
         exp = self.Transition(state, next_state, action, reward, done)
-        self.multi_step_trainsitions.append(exp)
-        # next_state = exp.next_state
-
-        if len(self.multi_step_trainsitions) < self.multi_step_num * self.state_channel:
-            return
-        multi_step_reward = 0
-        for i in range(0, self.multi_step_num, self.state_channel):
-            exp_i = self.multi_step_trainsitions[i]
-            r = exp_i.reward
-            multi_step_reward += r * self.multi_step_gamma ** i
-
-            if exp_i.done:
-                break
-        for i in range(self.state_channel):
-            if i == 0:
-                state, _, action, _, _ = self.multi_step_trainsitions.popleft()
-            else:
-                _ = self.multi_step_trainsitions.popleft()
-        exp = self.Transition(state, exp.next_state, action,
-                              multi_step_reward, exp.done)
 
         # memory compress
         if self.memory_compress:
@@ -155,13 +134,24 @@ class Mario:
         if self.priority_experience_reply:  # priority experience reply
             batch = []
             indices = []
-            for rand in np.random.uniform(0, self.memory.total(), self.batch_size):
-                idx, _, memory = self.memory.get(rand)
+            ## 補正
+            weights = np.empty(self.batch_size, dtype='float32')
+            total = self.tree.total()
+            beta = self.priority_beta + \
+                (1 - self.priority_beta) * self.episode / self.episodes_num
+            
+            for i, rand in enumerate(np.random.uniform(0, self.memory.total(), self.batch_size)):
+                idx, priority, memory = self.memory.get(rand)
+                
+                ### weightを計算 
+                weights[i] = (self.memory_length * priority / total) ** (-beta)                
+
                 # decompress
                 if self.memory_compress:
                     memory = pickle.loads(zlib.decompress(memory))
                 batch.append(memory)
                 indices.append(idx)
+            weights /= weights.max()
         else:
             # decompress
             if self.memory_compress:
@@ -172,9 +162,10 @@ class Mario:
             else:
                 batch = random.sample(self.memory, self.batch_size)
             indices = None
+            weights = None
 
         transaction = self.Transition(*map(torch.stack, zip(*batch)))
-        return (indices, transaction)
+        return (indices, transaction, weights)
 
     def td_estimate(self, state, action):
         current_Q = self.policy_net(state)[
@@ -192,7 +183,9 @@ class Mario:
             ]
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
-    def update_Q_online(self, td_estimate, td_target):
+    def update_Q_online(self, td_estimate, td_target, weights):
+        if self.priority_use_IS:
+            loss = torch.abs(td_estimate - td_target) * torch.from_numpy(weights).to('cuda')
         with autocast():
             loss = self.loss_fn(td_estimate, td_target)
         self.scaler.scale(loss).backward()
@@ -216,13 +209,13 @@ class Mario:
             return
 
         # sample
-        indices, transaction = self.sample()
+        indices, transaction, weights = self.sample()
 
         # learn
         td_est = self.td_estimate(transaction.state, transaction.action)
         td_tgt = self.td_target(
             transaction.reward, transaction.next_state, transaction.done)
-        loss = self.update_Q_online(td_est, td_tgt)
+        loss = self.update_Q_online(td_est, td_tgt, weights)
 
         # priority experience reply
         if self.priority_experience_reply:
