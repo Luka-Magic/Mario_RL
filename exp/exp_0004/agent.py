@@ -125,7 +125,6 @@ class Mario:
             exp_i = self.multi_step_trainsitions[i]
             r = exp_i.reward
             multi_step_reward += r * self.multi_step_gamma ** i
-
             if exp_i.done:
                 break
 
