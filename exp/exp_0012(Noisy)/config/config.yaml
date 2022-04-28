@@ -37,5 +37,5 @@ learn_every: 3
 sync_every: 10000
 
 exploration_rate: 1
-exploration_rate_decay: 0.999942
+exploration_rate_decay: 0.99999975
 exploration_rate_min: 0.1

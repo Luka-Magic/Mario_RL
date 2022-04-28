@@ -23,34 +23,6 @@ class SkipFrame(gym.Wrapper):
         return obs, total_reward, done, info
 
 
-class RunForYourLifeEnv(gym.Wrapper):
-    def __init__(self, env, threshold=80):
-        super().__init__(env)
-        self.last_x_pos = 0
-        self.count = 0
-        self.threshold = threshold
-
-    def reset(self, **kwargs):
-        self.last_x_pos = 0
-        self.count = 0
-        return self.env.reset(**kwargs)
-
-    def step(self, action):
-        state, reward, done, info = self.env.step(action)
-        x_pos = info['x_pos']
-        if x_pos <= self.last_x_pos:
-            self.count += 1
-        else:
-            self.count = 0
-            self.last_x_pos = x_pos
-
-        if self.count >= self.threshold:
-            reward = -15
-            done = True
-
-        return state, reward, done, info
-
-
 class GrayScaleObservation(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
@@ -91,9 +63,7 @@ class ResizeObservation(gym.ObservationWrapper):
 
 
 def all_wrapper(env, cfg, init_episode):
-    env = RunForYourLifeEnv(env)
-    env = CustomRecordVideo(
-        env, cfg, init_episode=init_episode)
+    env = CustomRecordVideo(env, cfg, init_episode=init_episode)
     env = SkipFrame(env, skip=cfg.state_skip)
     env = GrayScaleObservation(env)
     env = ResizeObservation(env, shape=(cfg.state_height, cfg.state_width))

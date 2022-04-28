@@ -91,6 +91,10 @@ class Mario:
             action_idx = torch.argmax(
                 action_values, axis=1).item()
 
+        self.exploration_rate *= self.exploration_rate_decay
+        self.exploration_rate = max(
+            self.exploration_rate_min, self.exploration_rate)
+
         self.curr_step += 1
         return action_idx
 
@@ -233,9 +237,6 @@ class Mario:
         self.curr_ep_q = 0.0
         self.curr_ep_loss_length = 0
         self.curr_ep_time = time.time()
-        self.exploration_rate *= self.exploration_rate_decay
-        self.exploration_rate = max(
-            self.exploration_rate_min, self.exploration_rate)
 
     def log_episode(self, episode, info):
         self.episode = episode
