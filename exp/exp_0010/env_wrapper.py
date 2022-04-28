@@ -91,9 +91,10 @@ class ResizeObservation(gym.ObservationWrapper):
 
 
 def all_wrapper(env, cfg, init_episode):
-    env = SkipFrame(env, skip=cfg.state_skip)
     env = RunForYourLifeEnv(env)
-    env = CustomRecordVideo(env, cfg, init_episode=init_episode)
+    env = CustomRecordVideo(
+        env, cfg, init_episode=init_episode)
+    env = SkipFrame(env, skip=cfg.state_skip)
     env = GrayScaleObservation(env)
     env = ResizeObservation(env, shape=(cfg.state_height, cfg.state_width))
     env = FrameStack(env, num_stack=cfg.state_channel)
