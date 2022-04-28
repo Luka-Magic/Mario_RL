@@ -7,6 +7,22 @@ from gym.wrappers import FrameStack
 from utils.customwrappers import CustomRecordVideo
 
 
+class SkipFrame(gym.Wrapper):
+    def __init__(self, env, skip):
+        super().__init__(env)
+        self._skip = skip
+
+    def step(self, action):
+        total_reward = 0.0
+        done = False
+        for i in range(self._skip):
+            obs, reward, done, info = self.env.step(action)
+            total_reward += reward
+            if done:
+                break
+        return obs, total_reward, done, info
+
+
 class RunForYourLifeEnv(gym.Wrapper):
     def __init__(self, env, threshold=20):
         super().__init__(env)
@@ -33,22 +49,6 @@ class RunForYourLifeEnv(gym.Wrapper):
             done = True
 
         return state, reward, done, info
-
-
-class SkipFrame(gym.Wrapper):
-    def __init__(self, env, skip):
-        super().__init__(env)
-        self._skip = skip
-
-    def step(self, action):
-        total_reward = 0.0
-        done = False
-        for i in range(self._skip):
-            obs, reward, done, info = self.env.step(action)
-            total_reward += reward
-            if done:
-                break
-        return obs, total_reward, done, info
 
 
 class GrayScaleObservation(gym.ObservationWrapper):
@@ -91,9 +91,9 @@ class ResizeObservation(gym.ObservationWrapper):
 
 
 def all_wrapper(env, cfg, init_episode):
-    env = CustomRecordVideo(env, cfg, init_episode=init_episode)
     env = SkipFrame(env, skip=cfg.state_skip)
     env = RunForYourLifeEnv(env)
+    env = CustomRecordVideo(env, cfg, init_episode=init_episode)
     env = GrayScaleObservation(env)
     env = ResizeObservation(env, shape=(cfg.state_height, cfg.state_width))
     env = FrameStack(env, num_stack=cfg.state_channel)
