@@ -63,6 +63,10 @@ class Mario:
         self.priority_use_IS = cfg.priority_use_IS
         self.priority_beta = cfg.priority_beta
 
+        self.multi_step_num = cfg.multi_step_num
+        self.multi_step_trainsitions = deque(maxlen=self.multi_step_num)
+        self.multi_step_gamma = cfg.multi_step_gamma
+
         # learn
         self.gamma = cfg.gamma
         self.scaler = GradScaler()
@@ -115,6 +119,25 @@ class Mario:
         done = torch.tensor([done]).cuda().squeeze()
 
         exp = self.Transition(state, next_state, action, reward, done)
+        
+        # multi step learning
+        self.multi_step_trainsitions.append(exp)
+
+        if len(self.multi_step_trainsitions) == self.multi_step_num:
+            multi_step_reward = 0
+            nstep_done = False
+            for i, exp_i in enumerate(self.multi_step_trainsitions):
+                reward_i = exp_i.reward
+                done_i = exp_i.done
+                multi_step_reward += reward * self.multi_step_gamma ** i
+                if done_i:
+                    nstep_done = True
+                    break
+        state = self.multi_step_trainsitions[0].state
+        next_state = self.multi_step_trainsitions[-1].next_state
+        action = self.multi_step_trainsitions[0].action
+        done = nstep_done
+        exp = self.Transition(state, next_state, action, multi_step_reward, done)
 
         # memory compress
         if self.memory_compress:
