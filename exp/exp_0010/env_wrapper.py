@@ -24,7 +24,7 @@ class SkipFrame(gym.Wrapper):
 
 
 class RunForYourLifeEnv(gym.Wrapper):
-    def __init__(self, env, threshold=20):
+    def __init__(self, env, threshold=80):
         super().__init__(env)
         self.last_x_pos = 0
         self.count = 0
