@@ -1,7 +1,7 @@
 ######   BASIC   ###############################
 init_learning: False
 wandb_project: RL_SMB
-wandb: False
+wandb: True
 
 environment: 'SuperMarioBros-8-3-v1'
 actions: [['right', 'B'], ['right', 'A', 'B']] # 'SIMPLE_MOVEMENT'
@@ -15,7 +15,7 @@ episodes: 10000
 batch_size: 32
 save_interval: 100
 memory_length: 50000
-save_model_interval: 5000
+save_model_interval: 500
 video_save_interval: 100
 video_save_fps: 60
 
