@@ -1,7 +1,7 @@
 ######   BASIC   ###############################
 init_learning: False
 wandb_project: RL_SMB
-wandb: False
+wandb: True
 
 environment: 'SuperMarioBros-8-3-v1'
 actions: [['right', 'B'], ['right', 'A', 'B']] # 'SIMPLE_MOVEMENT'
@@ -10,8 +10,8 @@ state_height: 84
 state_width: 84
 state_channel: 4
 state_skip: 4
-dead_threshold: 100
-dead_threshold_reduce_interval: 30
+dead_threshold: 80
+dead_threshold_reduce_interval: 300
 
 episodes: 10000
 batch_size: 32
