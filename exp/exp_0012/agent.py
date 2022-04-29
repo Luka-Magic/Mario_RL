@@ -112,32 +112,32 @@ class Mario:
         self.curr_ep_length += 1
 
         # momory
+        # multi step learning
+        if self.multi_step_num > 1:
+            exp = self.Transition(state, next_state, action, reward, done)
+            self.multi_step_trainsitions.append(exp)
+            if len(self.multi_step_trainsitions) != self.multi_step_num:
+                return
+            multi_step_reward = 0
+            nstep_done = False
+            for i, exp_i in enumerate(self.multi_step_trainsitions):
+                reward_i = exp_i.reward
+                done_i = exp_i.done
+                multi_step_reward += reward * self.multi_step_gamma ** i
+                if done_i:
+                    nstep_done = True
+                    break
+            state = self.multi_step_trainsitions[0].state
+            next_state = self.multi_step_trainsitions[-1].next_state
+            action = self.multi_step_trainsitions[0].action
+            reward = multi_step_reward
+            done = nstep_done
+
         state = torch.tensor(state).cuda()
         next_state = torch.tensor(next_state).cuda()
         action = torch.tensor([action]).cuda().squeeze()
         reward = torch.tensor([reward]).cuda().squeeze()
         done = torch.tensor([done]).cuda().squeeze()
-
-        exp = self.Transition(state, next_state, action, reward, done)
-
-        # multi step learning
-        self.multi_step_trainsitions.append(exp)
-
-        if len(self.multi_step_trainsitions) != self.multi_step_num:
-            return
-        multi_step_reward = 0
-        nstep_done = False
-        for i, exp_i in enumerate(self.multi_step_trainsitions):
-            reward_i = exp_i.reward
-            done_i = exp_i.done
-            multi_step_reward += reward * self.multi_step_gamma ** i
-            if done_i:
-                nstep_done = True
-                break
-        state = self.multi_step_trainsitions[0].state
-        next_state = self.multi_step_trainsitions[-1].next_state
-        action = self.multi_step_trainsitions[0].action
-        done = nstep_done
         exp = self.Transition(state, next_state, action,
                               multi_step_reward, done)
 
