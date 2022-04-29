@@ -52,7 +52,6 @@ class RunForYourLifeEnv(gym.Wrapper):
         
         if done: # episodeをカウントする。
             self.episode += 1
-            print(f'threshold: {self.threshold}, episode: {self.episode}')
         
         self.threshold = max(1, self.init_threshold - 10*(self.episode//self.threshold_reduce_interval))
         
