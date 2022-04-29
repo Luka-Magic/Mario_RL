@@ -36,6 +36,6 @@ burnin: 10000
 learn_every: 3
 sync_every: 10000
 
-exploration_rate: 1
+exploration_rate: 0.
 exploration_rate_decay: 0.999942
-exploration_rate_min: 0.1
+exploration_rate_min: 0.

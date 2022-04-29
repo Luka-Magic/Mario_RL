@@ -252,7 +252,7 @@ class Mario:
         wandb_dict = dict(
             episode=episode,
             step=self.curr_step,
-            epsilon=self.exploration_rate,
+            # epsilon=self.exploration_rate,
             step_per_second=ep_step_per_second,
             reward=self.curr_ep_reward,
             length=self.curr_ep_length,
