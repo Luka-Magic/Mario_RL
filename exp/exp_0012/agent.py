@@ -121,10 +121,8 @@ class Mario:
             multi_step_reward = 0
             nstep_done = False
             for i, exp_i in enumerate(self.multi_step_trainsitions):
-                reward_i = exp_i.reward
-                done_i = exp_i.done
-                multi_step_reward += reward * self.multi_step_gamma ** i
-                if done_i:
+                multi_step_reward += exp_i.reward * self.multi_step_gamma ** i
+                if exp_i.done:
                     nstep_done = True
                     break
             state = self.multi_step_trainsitions[0].state
