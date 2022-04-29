@@ -45,7 +45,6 @@ class FactorizedNoisy(nn.Module):
         return torch.sign(x) * torch.sqrt(torch.abs(x))
 
 
-
 class MarioNet(nn.Module):
     def __init__(self, cfg, input_dim, output_dim):
         super().__init__()
