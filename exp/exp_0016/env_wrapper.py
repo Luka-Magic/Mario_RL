@@ -23,13 +23,14 @@ class SkipFrame(gym.Wrapper):
         return obs, total_reward, done, info
 
 class RunForYourLifeEnv(gym.Wrapper):
-    def __init__(self, env, init_episode=0, threshold=80):
+    def __init__(self, env, cfg, init_episode=0):
         super().__init__(env)
         self.last_x_pos = 0
         self.count = 0
         self.episode = init_episode
-        self.init_threshold = threshold
-        self.threshold = max(1, self.init_threshold - 10*(self.episode//50))
+        self.init_threshold = cfg.dead_threshold
+        self.threshold_reduce_interval = cfg.dead_threshold_reduce_interval
+        self.threshold = max(1, self.init_threshold - 10*(self.episode//self.threshold_reduce_interval))
 
     def reset(self, **kwargs):
         self.last_x_pos = 0
@@ -53,7 +54,7 @@ class RunForYourLifeEnv(gym.Wrapper):
             self.episode += 1
             print(f'threshold: {self.threshold}, episode: {self.episode}')
         
-        self.threshold = max(1, self.init_threshold - 10*(self.episode//50))
+        self.threshold = max(1, self.init_threshold - 10*(self.episode//self.threshold_reduce_interval))
         
         return state, reward, done, info
 
@@ -98,7 +99,7 @@ class ResizeObservation(gym.ObservationWrapper):
 
 
 def all_wrapper(env, cfg, init_episode):
-    env = RunForYourLifeEnv(env, init_episode=init_episode)
+    env = RunForYourLifeEnv(env, cfg, init_episode=init_episode)
     env = CustomRecordVideo(
         env, cfg, init_episode=init_episode)
     env = SkipFrame(env, skip=cfg.state_skip)
