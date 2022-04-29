@@ -139,7 +139,7 @@ class Mario:
         reward = torch.tensor([reward]).cuda().squeeze()
         done = torch.tensor([done]).cuda().squeeze()
         exp = self.Transition(state, next_state, action,
-                              multi_step_reward, done)
+                              reward, done)
 
         # memory compress
         if self.memory_compress:
