@@ -268,11 +268,10 @@ class Mario:
                 'cuda', dtype=torch.float32)
             offset = torch.linspace(0, ((self.batch_size-1) * self.n_atoms),
                                     self.batch_size).unsqueeze(1).expand(self.batch_size, self.n_atoms).to(l)
-
             m.view(-1).index_add_(0, (l + offset).view(-1),
-                                  (p_next_best * (u.float() - b)).view(-1))
+                                  (p_next_best * (u.float() - b)).float().view(-1))
             m.view(-1).index_add_(0, (u + offset).view(-1),
-                                  (p_next_best * (b - l.float())).view(-1))
+                                  (p_next_best * (b - l.float())).float().view(-1))
         # self.model.reset_noise()
         log_p = self.policy_net(transaction.state, softmax='log')
         log_p_a = log_p[range(self.batch_size), transaction.action.squeeze()]
