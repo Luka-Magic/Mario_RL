@@ -3,7 +3,7 @@ init_learning: False
 wandb_project: RL_SMB
 wandb: True
 
-environment: 'SuperMarioBros-7-2-v1'
+environment: 'SuperMarioBros-6-4-v1'
 actions: [['right', 'B'], ['right', 'A', 'B']] # 'SIMPLE_MOVEMENT'
 
 state_height: 84
