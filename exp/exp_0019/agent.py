@@ -190,7 +190,6 @@ class Mario:
             weights = None
 
         transaction = self.Transition(*map(torch.stack, zip(*batch)))
-        print(transaction.state.shape, transaction.done.shape)
         return (indices, transaction, weights)
 
     # def td_estimate(self, state, action):
@@ -255,8 +254,9 @@ class Mario:
             gamma = torch.zeros(self.batch_size, self.n_atoms).to('cuda')
             gamma[non_final_mask] = self.gamma
 
-            print(transaction.reward.shape, gamma.shape, self.support.unsqueeze(0).shape)
-            Tz = transaction.reward + gamma * self.support.unsqueeze(0)
+            # print(transaction.reward.shape, gamma.shape, self.support.unsqueeze(0).shape)
+            Tz = transaction.reward.unsqueeze(
+                1) + gamma * self.support.unsqueeze(0)
             Tz = Tz.clamp(self.V_min, self.V_max)
             b = (Tz - self.V_min) / self.delta_z
             l, u = b.floor().long(), b.ceil().long()
