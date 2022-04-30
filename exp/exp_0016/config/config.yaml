@@ -11,7 +11,7 @@ state_width: 84
 state_channel: 4
 state_skip: 4
 dead_threshold: 80
-dead_threshold_reduce_interval: 300
+dead_threshold_reduce_interval: 500
 
 episodes: 10000
 batch_size: 32
