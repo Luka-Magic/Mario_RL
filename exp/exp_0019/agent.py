@@ -300,7 +300,7 @@ class Mario:
             if (indices != None):
                 for i, idx in enumerate(indices):
                     self.memory.update(idx, losses[i].item())
-            loss = (losses * torch.from_numpy(weights)
+            loss = (losses * torch.from_numpy(weights).to('cuda')
                     ).mean() if self.priority_use_IS else losses.mean()
         self.scaler.scale(loss).backward()
         self.scaler.step(self.optimizer)
