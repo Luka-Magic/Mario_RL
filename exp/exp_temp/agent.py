@@ -67,6 +67,14 @@ class Mario:
         self.multi_step_trainsitions = deque(maxlen=self.multi_step_num)
         self.multi_step_gamma = cfg.multi_step_gamma
 
+        self.n_atoms = cfg.n_atoms
+        self.V_min = cfg.V_min
+        self.V_max = cfg.V_max
+        if self.n_atoms > 1:
+            self.delta_z = (self.V_max - self.V_min) / (self.n_atoms - 1)
+            self.support = torch.linspace(
+                self.V_min, self.V_max, self.n_atoms).to('cuda')
+
         # learn
         self.gamma = cfg.gamma
         self.scaler = GradScaler()
@@ -91,7 +99,7 @@ class Mario:
             state = torch.tensor(state).cuda()
             state = state.unsqueeze(0)
             with autocast():
-                action_values = self.policy_net(state)
+                action_values = self.get_Q(self.policy_net, state)
             action_idx = torch.argmax(
                 action_values, axis=1).item()
 
@@ -184,38 +192,90 @@ class Mario:
         transaction = self.Transition(*map(torch.stack, zip(*batch)))
         return (indices, transaction, weights)
 
-    def td_estimate(self, state, action):
-        current_Q = self.policy_net(state)[
-            np.arange(0, self.batch_size), action
-        ]
-        return current_Q
+    # def td_estimate(self, state, action):
+    #     current_Q = self.policy_net(state)[
+    #         np.arange(0, self.batch_size), action
+    #     ]
+    #     return current_Q
 
-    @torch.no_grad()
-    def td_target(self, reward, next_state, done):
-        with autocast():
-            next_state_Q = self.policy_net(next_state)
-            best_action = torch.argmax(next_state_Q, axis=1)
-            next_Q = self.target_net(next_state)[
-                np.arange(0, self.batch_size), best_action
-            ]
-        return (reward + (1 - done.float()) * self.gamma * next_Q).float()
+    # @torch.no_grad()
+    # def td_target(self, reward, next_state, done):
+    #     with autocast():
+    #         next_state_Q = self.policy_net(next_state)
+    #         best_action = torch.argmax(next_state_Q, axis=1)
+    #         next_Q = self.target_net(next_state)[
+    #             np.arange(0, self.batch_size), best_action
+    #         ]
+    #     return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
-    def update_Q_online(self, td_estimate, td_target, weights):
-        if self.priority_use_IS:
-            loss = torch.abs(td_estimate - td_target) * \
-                torch.from_numpy(weights).mean().to('cuda')
-        with autocast():
-            loss = self.loss_fn(td_estimate, td_target)
-        self.scaler.scale(loss).backward()
-        self.scaler.step(self.optimizer)
-        self.scaler.update()
-        self.optimizer.zero_grad()
-        # for param in self.policy_net.parameters():
-        #     param.grad.data.clamp_(-1, 1)
-        return loss.item()
+    # def update_Q_online(self, td_estimate, td_target, weights):
+    #     if self.priority_use_IS:
+    #         loss = torch.abs(td_estimate - td_target) * \
+    #             torch.from_numpy(weights).mean().to('cuda')
+    #     with autocast():
+    #         loss = self.loss_fn(td_estimate, td_target)
+    #     self.scaler.scale(loss).backward()
+    #     self.scaler.step(self.optimizer)
+    #     self.scaler.update()
+    #     self.optimizer.zero_grad()
+    #     # for param in self.policy_net.parameters():
+    #     #     param.grad.data.clamp_(-1, 1)
+    #     return loss.item()
 
     def sync_Q_target(self):
         self.target_net.load_state_dict(self.policy_net.state_dict())
+
+    def get_Q(self, model, x):
+        # self.policy_model.reset_noise()
+        if self.n_atoms == 1:  # categorical DQNを使うとき
+            return model(x)
+        else:
+            x = model(x, softmax='normal')
+            return torch.sum(x * self.support, dim=2)
+
+    def loss_categorical(self, transaction):
+
+        non_final_mask = torch.tensor(~transaction.done).to('cuda')
+        non_final_next_state = torch.stack([next_state for not_done, next_state in zip(
+            non_final_mask, transaction.next_state) if not_done])
+
+        with torch.no_grad():
+            # terminal stateだけ取り除く処理
+            best_actions = self.get_Q(
+                self.policy_net, non_final_next_state).argmax(dim=1)
+            # self.target_model.reset_model()
+            p_next = self.target_net(non_final_next_state, softmax='normal')
+
+            p_next_best = torch.zeros(0).to('cuda', dtype=torch.float32).new_full(
+                (self.batch_size, self.n_atoms), 1.0 / self.n_atoms)
+            p_next_best[non_final_mask] = p_next[range(
+                len(non_final_next_state)), best_actions]
+
+            gamma = torch.zeros(self.batch_size, self.n_atoms).to('cuda')
+            gamma[non_final_mask] = self.gamma
+
+            # print(transaction.reward.shape, gamma.shape, self.support.unsqueeze(0).shape)
+            Tz = transaction.reward.unsqueeze(
+                1) + gamma * self.support.unsqueeze(0)
+            Tz = Tz.clamp(self.V_min, self.V_max)
+            b = (Tz - self.V_min) / self.delta_z
+            l, u = b.floor().long(), b.ceil().long()
+
+            l[(l == u) * (0 < l)] -= 1
+            u[(l == u) * (u < self.n_atoms - 1)] += 1
+
+            m = torch.zeros(self.batch_size, self.n_atoms).to(
+                'cuda', dtype=torch.float32)
+            offset = torch.linspace(0, ((self.batch_size-1) * self.n_atoms),
+                                    self.batch_size).unsqueeze(1).expand(self.batch_size, self.n_atoms).to(l)
+            m.view(-1).index_add_(0, (l + offset).view(-1),
+                                  (p_next_best * (u.float() - b)).float().view(-1))
+            m.view(-1).index_add_(0, (u + offset).view(-1),
+                                  (p_next_best * (b - l.float())).float().view(-1))
+        # self.model.reset_noise()
+        log_p = self.policy_net(transaction.state, softmax='log')
+        log_p_a = log_p[range(self.batch_size), transaction.action.squeeze()]
+        return -torch.sum(m * log_p_a, dim=1)
 
     def learn(self):
         # check step num
@@ -230,30 +290,42 @@ class Mario:
         indices, transaction, weights = self.sample()
 
         # learn
-        td_est = self.td_estimate(transaction.state, transaction.action)
-        td_tgt = self.td_target(
-            transaction.reward, transaction.next_state, transaction.done)
-        loss = self.update_Q_online(td_est, td_tgt, weights)
+        # td_est = self.td_estimate(transaction.state, transaction.action)
+        # td_tgt = self.td_target(
+        #     transaction.reward, transaction.next_state, transaction.done)
+        # loss = self.update_Q_online(td_est, td_tgt, weights)
 
-        # priority experience reply
+        losses = self.loss_categorical(transaction)
         if self.priority_experience_reply:
             if (indices != None):
-                for i, (td_est_i, td_tgt_i) in enumerate(zip(td_est, td_tgt)):
-                    td_error = abs(td_est_i.item() - td_tgt_i.item())
-                    priority = (
-                        td_error + self.priority_epsilon) ** self.priority_alpha
-                    self.memory.update(indices[i], priority)
+                for i, idx in enumerate(indices):
+                    self.memory.update(idx, losses[i].item())
+            loss = (losses * torch.from_numpy(weights).to('cuda')
+                    ).mean() if self.priority_use_IS else losses.mean()
+        self.scaler.scale(loss).backward()
+        self.scaler.step(self.optimizer)
+        self.scaler.update()
+        self.optimizer.zero_grad()
+
+        # priority experience reply
+        # if self.priority_experience_reply:
+        #     if (indices != None):
+        #         for i, (td_est_i, td_tgt_i) in enumerate(zip(td_est, td_tgt)):
+        #             td_error = abs(td_est_i.item() - td_tgt_i.item())
+        #             priority = (
+        #                 td_error + self.priority_epsilon) ** self.priority_alpha
+        #             self.memory.update(indices[i], priority)
+
         # log
         if loss:
             self.curr_ep_loss += loss
-            self.curr_ep_q += td_est.mean().item()
+            # self.curr_ep_q += td_est.mean().item()
             self.curr_ep_loss_length += 1
 
     def init_episode(self):
         self.curr_ep_reward = 0.0
         self.curr_ep_length = 0
         self.curr_ep_loss = 0.0
-        self.curr_ep_q = 0.0
         self.curr_ep_loss_length = 0
         self.curr_ep_time = time.time()
         self.exploration_rate *= self.exploration_rate_decay
@@ -264,14 +336,13 @@ class Mario:
         self.episode = episode
         last_time = time.time()
         episode_time = last_time - self.curr_ep_time
-        self.best_time = 0
         if self.curr_ep_loss_length == 0:
             ep_avg_loss = 0
             ep_avg_q = 0
             ep_step_per_second = 0
         else:
             ep_avg_loss = self.curr_ep_loss / self.curr_ep_loss_length
-            ep_avg_q = self.curr_ep_q / self.curr_ep_loss_length
+            # ep_avg_q = self.curr_ep_q / self.curr_ep_loss_length
             ep_step_per_second = self.curr_ep_loss_length / episode_time
         wandb_dict = dict(
             episode=episode,
@@ -281,20 +352,14 @@ class Mario:
             reward=self.curr_ep_reward,
             length=self.curr_ep_length,
             average_loss=ep_avg_loss,
-            average_q=ep_avg_q,
+            # average_q=ep_avg_q,
             dead_or_alive=int(info['flag_get']),
             x_pos=int(info['x_pos']),
             time=int(info['time'])
         )
-
-        if info['flag_get']:
-            if self.best_time < info['time']:
-                wandb.run.summary['best_time'] = info['time']
-                self.best_time = info['time']
-
         if info['video'] is not None:
             wandb_dict['video'] = wandb.Video(
-                info['video'], fps=self.video_save_fps, format='mp4', caption=f"episode: {episode}, x: {int(info['x_pos'])}, flag: {info['flag_get']}")
+                info['video'], fps=self.video_save_fps, format='mp4', caption=f'episode: {episode}')
         if self.wandb:
             wandb.log(wandb_dict)
         self.save(episode)

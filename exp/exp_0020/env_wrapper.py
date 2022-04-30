@@ -22,15 +22,13 @@ class SkipFrame(gym.Wrapper):
                 break
         return obs, total_reward, done, info
 
+
 class RunForYourLifeEnv(gym.Wrapper):
-    def __init__(self, env, cfg, init_episode=0):
+    def __init__(self, env, threshold=80):
         super().__init__(env)
         self.last_x_pos = 0
         self.count = 0
-        self.episode = init_episode
-        self.init_threshold = cfg.dead_threshold
-        self.threshold_reduce_interval = cfg.dead_threshold_reduce_interval
-        self.threshold = max(1, self.init_threshold - 10*(self.episode//self.threshold_reduce_interval))
+        self.threshold = threshold
 
     def reset(self, **kwargs):
         self.last_x_pos = 0
@@ -46,15 +44,10 @@ class RunForYourLifeEnv(gym.Wrapper):
             self.count = 0
             self.last_x_pos = x_pos
 
-        if x_pos > 50 and self.count >= self.threshold:
+        if self.count >= self.threshold:
             reward = -15
             done = True
-        
-        if done: # episodeをカウントする。
-            self.episode += 1
-        
-        self.threshold = max(1, self.init_threshold - 10*(self.episode//self.threshold_reduce_interval))
-        
+
         return state, reward, done, info
 
 
@@ -98,7 +91,7 @@ class ResizeObservation(gym.ObservationWrapper):
 
 
 def all_wrapper(env, cfg, init_episode):
-    env = RunForYourLifeEnv(env, cfg, init_episode=init_episode)
+    env = RunForYourLifeEnv(env)
     env = CustomRecordVideo(
         env, cfg, init_episode=init_episode)
     env = SkipFrame(env, skip=cfg.state_skip)
