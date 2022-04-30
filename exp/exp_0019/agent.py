@@ -295,11 +295,13 @@ class Mario:
         #     transaction.reward, transaction.next_state, transaction.done)
         # loss = self.update_Q_online(td_est, td_tgt, weights)
 
-        loss = self.loss_categorical(transaction)
+        losses = self.loss_categorical(transaction)
         if self.priority_experience_reply:
-            self.memory.update(indices, loss.detach().cpu())
-            loss = (loss * torch.from_numpy(weights)
-                    ).mean() if self.priority_use_IS else loss.mean()
+            if (indices != None):
+                for i, idx in enumerate(indices):
+                    self.memory.update(idx, losses[i].item())
+            loss = (losses * torch.from_numpy(weights)
+                    ).mean() if self.priority_use_IS else losses.mean()
         self.scaler.scale(loss).backward()
         self.scaler.step(self.optimizer)
         self.scaler.update()
