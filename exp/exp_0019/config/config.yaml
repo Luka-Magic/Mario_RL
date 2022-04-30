@@ -49,8 +49,8 @@ multi_step_gamma: 0.9
 
 # model
 n_atoms: 21
-v_min: -10
-v_max: 10
+V_min: -10
+V_max: 10
 
 # learning
 batch_size: 32
