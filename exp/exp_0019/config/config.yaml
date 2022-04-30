@@ -1,7 +1,7 @@
 ######   SETTING   #############################
 
 # init setting 
-init_learning: False
+init_learning: True
 
 # wandb setting
 wandb: False
@@ -58,7 +58,7 @@ lr: 0.00025
 optimizer: Adam
 loss_fn: SmoothL1Loss
 gamma: 0.9
-burnin: 10000
+burnin: 2000
 learn_every: 3
 sync_every: 10000
 
