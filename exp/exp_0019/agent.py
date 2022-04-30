@@ -244,7 +244,7 @@ class Mario:
             p_next = self.target_net(transaction.next_state, softmax='normal')
 
             p_next_best = torch.zeros(0).to('cuda', dtype=torch.float32).new_full((self.batch_size, self.n_atoms), 1.0 / self.n_atoms)
-            p_next_best[non_final_mask] = p_next[]
+            # p_next_best[non_final_mask] = p_next[]
 
 
 
