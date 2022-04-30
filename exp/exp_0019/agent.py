@@ -297,7 +297,7 @@ class Mario:
 
         loss = self.loss_categorical(transaction)
         if self.priority_experience_reply:
-            self.memory.update(indices, loss)
+            self.memory.update(indices, loss.detach().cpu())
             loss = (loss * torch.from_numpy(weights)
                     ).mean() if self.priority_use_IS else loss.mean()
         self.scaler.scale(loss).backward()
