@@ -46,13 +46,11 @@ class FactorizedNoisy(nn.Module):
 
 
 class MarioNet(nn.Module):
-    def __init__(self, cfg, input_dim, output_dim):
+    def __init__(self, cfg, n_actions):
         super().__init__()
-        c, h, w = input_dim
-        if h != cfg.state_height:
-            raise ValueError(f'Expecting input height: 84, got: {h}')
-        if w != cfg.state_width:
-            raise ValueError(f'Expecting input width: 84, got: {w}')
+        self.n_actions = n_actions
+        self.n_atoms = cfg.n_atoms
+        c, h, w = cfg.state_channel, cfg.state_height, cfg.state_width
 
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
@@ -67,18 +65,28 @@ class MarioNet(nn.Module):
         self.values = nn.Sequential(
             FactorizedNoisy(3136, 512),
             nn.ReLU(),
-            FactorizedNoisy(512, 1)
+            FactorizedNoisy(512, self.n_atoms)
         )
         self.advantages = nn.Sequential(
             FactorizedNoisy(3136, 512),
             nn.ReLU(),
-            FactorizedNoisy(512, output_dim)
+            FactorizedNoisy(512, self.n_actions * self.n_atoms)
         )
 
-    def forward(self, x):
+    def forward(self, x, softmax='normal'):
         x = self.conv(x)
         x = x.view(x.size(0), -1)
-        values = self.values(x)
-        advantages = self.advantages(x)
-        q = values + (advantages - advantages.mean(dim=1, keepdims=True))
-        return q
+        values = self.values(x).view(-1, 1, self.n_atoms)
+        advantages = self.advantages(x).view(-1, self.n_actions, self.n_atoms)
+
+        output = values.expand(-1, self.n_actions, self.n_atoms) + (advantages - advantages.mean(dim=1, keepdims=True))
+        
+        if self.n_atoms == 1:
+            return output.squeeze()
+        
+        if softmax == 'normal':
+            z = F.softmax(output, dim=2)
+            return z
+        elif softmax == 'log':
+            z = F.log_softmax(output, dim=2)
+            return z
