@@ -264,6 +264,7 @@ class Mario:
         self.episode = episode
         last_time = time.time()
         episode_time = last_time - self.curr_ep_time
+        self.best_time = 0
         if self.curr_ep_loss_length == 0:
             ep_avg_loss = 0
             ep_avg_q = 0
@@ -285,9 +286,15 @@ class Mario:
             x_pos=int(info['x_pos']),
             time=int(info['time'])
         )
+
+        if info['flag_get']:
+            if self.best_time < info['time']:
+                wandb.run.summary['best_time'] = info['time']
+                self.best_time = info['time']
+
         if info['video'] is not None:
             wandb_dict['video'] = wandb.Video(
-                info['video'], fps=self.video_save_fps, format='mp4', caption=f'episode: {episode}')
+                info['video'], fps=self.video_save_fps, format='mp4', caption=f"episode: {episode}, x: {int(info['x_pos'])}, flag: {info['flag_get']}")
         if self.wandb:
             wandb.log(wandb_dict)
         self.save(episode)
