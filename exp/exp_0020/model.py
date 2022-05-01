@@ -46,15 +46,11 @@ class FactorizedNoisy(nn.Module):
 
 
 class MarioNet(nn.Module):
-    def __init__(self, cfg, input_dim, output_dim):
+    def __init__(self, cfg, n_actions):
         super().__init__()
-        self.n_actions = output_dim
+        self.n_actions = n_actions
         self.n_atoms = cfg.n_atoms
-        c, h, w = input_dim
-        if h != cfg.state_height:
-            raise ValueError(f'Expecting input height: 84, got: {h}')
-        if w != cfg.state_width:
-            raise ValueError(f'Expecting input width: 84, got: {w}')
+        c, h, w = cfg.state_channel, cfg.state_height, cfg.state_width
 
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),

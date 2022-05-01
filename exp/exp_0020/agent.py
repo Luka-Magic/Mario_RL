@@ -14,6 +14,7 @@ import datetime
 import wandb
 import zlib
 
+Transition = namedtuple('Transition', ('state', 'next_state', 'action', 'reward', 'done'))
 
 class Memory:
     def __init__(self, cfg):
@@ -32,14 +33,14 @@ class Memory:
         return exp
 
     def push(self, exp):
-        exp = self._compress(exp)         
+        exp = self._compress(exp)
         self.memory.append(exp)
 
-    def sample(self, _):
+    def sample(self, episode):
         sample_indices = np.random.choice(
             np.arange(len(self.memory)), replace=False, size=self.batch_size)
         batch = [self._decompress(self.memory[idx]) for idx in sample_indices]
-        transaction = self.Transition(*map(torch.stack, zip(*batch)))
+        transaction = Transition(*map(torch.stack, zip(*batch)))
         return (None, transaction, None)
 
     def update(self, indices, td_error):
@@ -74,7 +75,7 @@ class PERMemory(Memory):
         weights = np.empty(self.batch_size, dtype='float32')
         total = self.memory.total()
         beta = self.priority_beta + \
-            (1 - self.priority_beta) * self.episode / self.n_episodes
+            (1 - self.priority_beta) * episode / self.n_episodes
 
         for i, rand in enumerate(np.random.uniform(0, total, self.batch_size)):
             idx, priority, exp = self.memory.get(rand)
@@ -88,7 +89,7 @@ class PERMemory(Memory):
             indices.append(idx)
         weights /= weights.max()
 
-        transaction = self.Transition(*map(torch.stack, zip(*batch)))
+        transaction = Transition(*map(torch.stack, zip(*batch)))
         return (indices, transaction, weights)
 
     def update(self, indices, td_error):
@@ -100,17 +101,13 @@ class PERMemory(Memory):
                 self.memory.update(indices[i], priority)
 
 class Brain:
-    def __init__(self, cfg):
-        pass
-
-
-class Mario:
     def __init__(self, cfg, action_dim, save_dir):
         # input
         self.action_dim = action_dim
         self.save_dir = save_dir
 
         # init
+        self.cfg = cfg
         self.wandb = cfg.wandb
         self.init_learning = cfg.init_learning
         self.curr_step = 0
@@ -121,17 +118,9 @@ class Mario:
         self.save_interval = cfg.save_interval
         self.save_model_interval = cfg.save_model_interval
         self.video_save_fps = cfg.video_save_fps
-        self.Transition = namedtuple('Transition',
-                                     ('state', 'next_state', 'action', 'reward', 'done'))
 
         # model
-        self.state_dim = (cfg.state_channel, cfg.state_height, cfg.state_width)
-        self.policy_net = MarioNet(
-            cfg, self.state_dim, self.action_dim).float().to('cuda')
-        self.target_net = MarioNet(
-            cfg, self.state_dim, self.action_dim).float().to('cuda')
-        self.sync_Q_target()
-        self.target_net.eval()
+        self.policy_net, self.target_net = self._create_model(cfg)
 
         # exploration
         self.exploration_rate = cfg.exploration_rate
@@ -139,6 +128,7 @@ class Mario:
         self.exploration_rate_min = cfg.exploration_rate_min
 
         # memory
+        self.memory = PERMemory(cfg) if cfg.use_PER else Memory(cfg)
 
         self.multi_step_num = cfg.multi_step_num
         self.multi_step_trainsitions = deque(maxlen=self.multi_step_num)
@@ -167,20 +157,37 @@ class Mario:
         self.init_episode()
         self.load()
 
-    # exploration
-    def action(self, state):
-        if np.random.rand() < self.exploration_rate:
+    def _synchronize_model(self, policy_net, target_net):
+        target_net.load_state_dict(policy_net.state_dict())
+        return policy_net, target_net
+
+    def _create_model(self, cfg):
+        policy_net = MarioNet(
+            self.cfg, self.n_actions).float().to('cuda')
+        target_net = MarioNet(
+            self.cfg, self.n_actions).float().to('cuda')
+        policy_net, target_net = self._synchronize_model(policy_net, target_net)
+        target_net.eval()
+        return policy_net, target_net        
+    
+    def select_action(self, state):
+        # noisy
+        epsilon = 0. if self.noisy else self.exploration_rate
+        
+        if np.random.rand() < epsilon:
             action_idx = np.random.randint(self.action_dim)
         else:
-            state = state.__array__()
-            state = torch.tensor(state).cuda()
-            state = state.unsqueeze(0)
+            # state = torch.tensor(state.__array__()).cuda().unsqueeze(0)
+            state = torch.tensor(state).cuda().unsqueeze(0)
             with autocast():
-                action_values = self.get_Q(self.policy_net, state)
+                if self.double:
+                    q = self.get_Q(self.policy_net, state)
+                else:
+                    q = self.get_Q(self.target_net, state)
             action_idx = torch.argmax(
-                action_values, axis=1).item()
-
-        self.curr_step += 1
+                q, axis=1).item()
+        
+        self.current_step += 1
         return action_idx
 
     # memory
@@ -285,9 +292,6 @@ class Mario:
     #     # for param in self.policy_net.parameters():
     #     #     param.grad.data.clamp_(-1, 1)
     #     return loss.item()
-
-    def sync_Q_target(self):
-        self.target_net.load_state_dict(self.policy_net.state_dict())
 
     def get_Q(self, model, x):
         # self.policy_model.reset_noise()
@@ -472,3 +476,20 @@ class Mario:
         self.restart_steps = self.curr_step
         self.restart_episodes = load_data['episode']
         print(f'Start from episode: {self.restart_episodes}')
+
+
+
+class Mario:
+    def __init__(self, cfg, n_actions, save_dir):
+        self.cfg = cfg
+        # self.n_actions = n_actions
+        # self.save_dir = save_dir
+        self.brain = Brain(cfg, n_actions, save_dir)
+    
+    def learn(self):
+        pass
+
+    def action(self):
+        pass
+
+    

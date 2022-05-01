@@ -11,7 +11,7 @@ state_width: 84
 state_channel: 4
 state_skip: 4
 
-episodes: 10000
+episodes: 20000
 batch_size: 32
 save_interval: 100
 memory_length: 50000
