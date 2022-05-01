@@ -15,7 +15,7 @@ episodes: 20000
 batch_size: 32
 save_interval: 100
 memory_length: 50000
-save_model_interval: 500
+save_model_interval: 1000
 video_save_interval: 100
 video_save_fps: 60
 
