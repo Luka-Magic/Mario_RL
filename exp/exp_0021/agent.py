@@ -105,9 +105,9 @@ class PERMemory(Memory):
 
 
 class Brain:
-    def __init__(self, cfg, action_dim, save_dir):
+    def __init__(self, cfg, n_actions, save_dir):
         # input
-        self.n_actions = action_dim
+        self.n_actions = n_actions
         self.save_dir = save_dir
 
         # init
