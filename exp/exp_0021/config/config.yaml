@@ -3,7 +3,7 @@
 reset_learning: False
 
 # wandb setting
-wandb: True
+wandb: False
 wandb_project: RL_SMB
 save_interval: 100
 save_model_interval: 500
