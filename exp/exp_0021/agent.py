@@ -159,6 +159,9 @@ class Brain:
                     self.V_min, self.V_max, self.n_atoms).to('cuda')
         else:
             self.n_atoms = 1
+        self.sync_every = cfg.sync_every
+        self.burnin = cfg.burnin
+        self.learn_every = cfg.learn_every
 
     def synchronize_model(self):
         # モデルの同期
