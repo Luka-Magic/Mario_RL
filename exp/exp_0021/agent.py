@@ -344,6 +344,8 @@ class Mario:
 
     def action(self, state):
         self.step += 1
+        print(type(state))
+        print(state.shape)
         action = self.brain.select_action(state)
         return action
 
