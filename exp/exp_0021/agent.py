@@ -366,7 +366,7 @@ class Mario:
                          next_state.__array__(),
                          action,
                          reward.__array__(),
-                         done.__array__()
+                         done
                          )
         self.brain.send_memory(exp)
 
