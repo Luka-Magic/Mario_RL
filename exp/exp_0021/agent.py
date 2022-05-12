@@ -350,7 +350,7 @@ class Mario:
         self.learn_every = cfg.learn_every
 
         self.brain = Brain(cfg, n_actions, save_dir)
-        self.logger = Logger()
+        self.logger = Logger(cfg)
 
     def action(self, state):
         self.step += 1
@@ -393,7 +393,7 @@ class Mario:
 
 
 class Logger:
-    def __init__(self):
+    def __init__(self, cfg):
         self.episode_last_time = time.time()
         self.step = 0
         self.wandb = cfg.wandb
