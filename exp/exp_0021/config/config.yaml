@@ -39,9 +39,10 @@ PER:
   priority_beta: 0.4
 
 # multi-step learning
-multi_step_learning:
-  n_multi_steps: 3
+multi_step_learning: True
+n_multi_steps: 3
 
+category: False
 ######   Leaning   ###############################
 # model
 n_atoms: 21

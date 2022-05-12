@@ -139,7 +139,7 @@ class Brain:
         self.exploration_rate_min = cfg.exploration_rate_min
 
         # memory
-        if cfg.use_PER:
+        if cfg.PER.use_PER:
             self.memory = PERMemory(cfg)
         else:
             self.memory = Memory(cfg)
