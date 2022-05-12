@@ -181,7 +181,7 @@ class Brain:
         if np.random.rand() < epsilon:
             action = np.random.randint(self.n_actions)
         else:
-            state = torch.tensor(state.__array__()).cuda().unsqueeze(0)
+            state = torch.tensor(state).cuda().unsqueeze(0)
             with torch.no_grad():
                 if self.categorical:
                     Q = self._get_Q_categorical(self.policy_net, state)
@@ -358,11 +358,16 @@ class Mario:
 
     def action(self, state):
         self.step += 1
-        action = self.brain.select_action(state)
+        action = self.brain.select_action(state.__array__())
         return action
 
     def observe(self, state, next_state, action, reward, done):
-        exp = Transition(state, next_state, action, reward, done)
+        exp = Transition(state.__array__(),
+                         next_state.__array__(),
+                         action.__array__(),
+                         reward.__array__(),
+                         done.__array__()
+                         )
         self.brain.send_memory(exp)
 
     def learn(self):
