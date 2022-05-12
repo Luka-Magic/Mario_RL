@@ -79,11 +79,12 @@ class MarioNet(nn.Module):
         values = self.values(x).view(-1, 1, self.n_atoms)
         advantages = self.advantages(x).view(-1, self.n_actions, self.n_atoms)
 
-        output = values.expand(-1, self.n_actions, self.n_atoms) + (advantages - advantages.mean(dim=1, keepdims=True))
-        
+        output = values.expand(-1, self.n_actions, self.n_atoms) + \
+            (advantages - advantages.mean(dim=1, keepdims=True))
+
         if self.n_atoms == 1:
-            return output.squeeze()
-        
+            return output
+
         if softmax == 'normal':
             z = F.softmax(output, dim=2)
             return z
