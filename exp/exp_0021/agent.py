@@ -382,7 +382,7 @@ class Mario:
 
 class Logger:
     def __init__(self):
-        self.record_time = time.time()
+        self.episode_last_time = time.time()
         self.step = 0
         self._reset_episode_log()
 
