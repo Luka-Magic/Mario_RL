@@ -5,7 +5,7 @@ reset_learning: False
 # wandb setting
 wandb: False
 wandb_project: RL_SMB
-save_interval: 100
+save_checkpoint_interval: 100
 save_model_interval: 500
 video_save_interval: 100
 video_save_fps: 60

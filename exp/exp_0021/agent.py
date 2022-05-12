@@ -350,7 +350,9 @@ class Mario:
         self.learn_every = cfg.learn_every
 
         self.brain = Brain(cfg, n_actions, save_dir)
-        self.logger = Logger(cfg)
+        self.wandb = cfg.wandb
+        if self.wandb:
+            self.logger = Logger(cfg, self.restart_episode)
 
     def action(self, state):
         self.step += 1
@@ -370,7 +372,9 @@ class Mario:
         if self.step % self.learn_every != 0:
             return
         loss, q = self.brain.update(self.episode)
-        self.logger.step(self.brain.exploration_rate, loss, q)
+
+        if self.wandb:
+            self.logger.step(self.brain.exploration_rate, loss, q)
 
     def restart_learning(self, checkpoint_path):
         self._reset_episode_log()
@@ -388,15 +392,46 @@ class Mario:
         return self.restart_episode
 
     def log_episode(self, episode, info):
+        if self.wandb == False:return
         self.episode = episode
         self.logger.log_episode(episode, info)
 
+        if episode != 0 and episode != self.restart_episode:
+            if episode % self.save_checkpoint_interval == 0:
+                self._save_checkpoint(episode)
+            if episode % self.save_model_interval == 0:
+                self._save(episode)
+
+    def _save_checkpoint(self, episode):
+        checkpoint_path = (self.save_dir / f'mario_net.ckpt')
+        torch.save(dict(
+            model=self.brain.policy_net.state_dict(),
+            exploration_rate=self.exploration_rate,
+            step=self.step,
+            episode=episode
+        ), checkpoint_path)
+        datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+        print(
+            f"Episode {episode} - "
+            f"Step {self.step} - "
+            f"Epsilon {self.exploration_rate:.3f} - "
+            f"Time {datetime_now}"
+        )
+
+    def _save(self, episode):
+        checkpoint_path = (self.save_dir / f'mario_net_{episode}.ckpt')
+        torch.save(dict(
+            model=self.brain.policy_net.state_dict(),
+            exploration_rate=self.brain.exploration_rate,
+            step=self.step,
+            episode=episode
+        ), checkpoint_path)
+
 
 class Logger:
-    def __init__(self, cfg):
+    def __init__(self):
         self.episode_last_time = time.time()
         self.step = 0
-        self.wandb = cfg.wandb
         self._reset_episode_log()
 
     def _reset_episode_log(self):
@@ -428,53 +463,24 @@ class Logger:
             episode_average_q = self.episode_q / self.episode_loss_length
             episode_step_per_second = self.episode_loss_length / episode_time
 
-        if self.wandb:
-            wandb_dict = dict(
-                episode=episode,
-                step=self.step,
-                epsilon=self.exploration_rate,
-                step_per_second=episode_step_per_second,
-                reward=self.episode_reward,
-                length=self.episode_length,
-                average_loss=episode_average_loss,
-                average_q=episode_average_q,
-                dead_or_alive=int(info['flag_get']),
-                x_pos=int(info['x_pos']),
-                time=int(info['time'])
-            )
-            if info['video'] is not None:
-                wandb_dict['video'] = wandb.Video(
-                    info['video'], fps=self.video_save_fps, format='mp4', caption=f'episode: {episode}')
-                wandb.log(wandb_dict)
-
-        if episode != 0 and episode != self.restart_episode:
-            if episode % self.save_interval == 0:
-                self._save_checkpoint(episode)
-            if episode % self.save_model_interval == 0:
-                self._save(episode)
+        wandb_dict = dict(
+            episode=episode,
+            step=self.step,
+            epsilon=self.exploration_rate,
+            step_per_second=episode_step_per_second,
+            reward=self.episode_reward,
+            length=self.episode_length,
+            average_loss=episode_average_loss,
+            average_q=episode_average_q,
+            dead_or_alive=int(info['flag_get']),
+            x_pos=int(info['x_pos']),
+            time=int(info['time'])
+        )
+        if info['video'] is not None:
+            wandb_dict['video'] = wandb.Video(
+                info['video'], fps=self.video_save_fps, format='mp4', caption=f'episode: {episode}')
+            wandb.log(wandb_dict)
+        
         self._reset_episode_log()
 
-    def _save_checkpoint(self, episode):
-        checkpoint_path = (self.save_dir / f'mario_net.ckpt')
-        torch.save(dict(
-            model=self.brain.policy_net.state_dict(),
-            exploration_rate=self.exploration_rate,
-            step=self.step,
-            episode=episode
-        ), checkpoint_path)
-        datetime_now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-        print(
-            f"Episode {episode} - "
-            f"Step {self.step} - "
-            f"Epsilon {self.exploration_rate:.3f} - "
-            f"Time {datetime_now}"
-        )
 
-    def _save(self, episode):
-        checkpoint_path = (self.save_dir / f'mario_net_{episode}.ckpt')
-        torch.save(dict(
-            model=self.brain.policy_net.state_dict(),
-            exploration_rate=self.brain.exploration_rate,
-            step=self.step,
-            episode=episode
-        ), checkpoint_path)
