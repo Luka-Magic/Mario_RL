@@ -24,6 +24,8 @@ class Memory:
         self.memory = deque(maxlen=self.memory_size)
         self.memory_compress = cfg.memory_compress
 
+        self.batch_size = cfg.batch_size
+
     def _compress(self, exp):
         if self.memory_compress:
             exp = zlib.compress(pickle.dumps(exp))
