@@ -115,7 +115,7 @@ class Brain:
         self.wandb = cfg.wandb
         self.restart_episode = 0  # 学習再開が何episode目から始めるか
         self.episode = 0  # 現在何episode目か
-        self.n_episodes = cfg.episodes  # 学習するepisode合計数
+        self.n_episodes = cfg.n_episodes  # 学習するepisode合計数
         self.gamma = cfg.gamma
 
         # model
