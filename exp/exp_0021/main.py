@@ -42,7 +42,7 @@ def main(cfg: DictConfig):
     env = env_wrappers(env, cfg, init_episode=init_episode)
 
     # 学習
-    for episode in tqdm(range(init_episode, cfg.episodes)):
+    for episode in tqdm(range(init_episode, cfg.n_episodes)):
         state = env.reset()
         while True:
             action = mario.action(state)
