@@ -213,15 +213,15 @@ class Brain:
             action = self.multi_step_trainsitions[0].action
             reward = multi_step_reward
             done = multi_step_done
-            exp = self.Transition(state, next_state, action, reward, done)
-        
+            exp = Transition(state, next_state, action, reward, done)
+
         state = torch.tensor(exp.state).cuda()
         next_state = torch.tensor(exp.next_state).cuda()
         action = torch.tensor([exp.action]).cuda().squeeze()
         reward = torch.tensor([exp.reward]).cuda().squeeze()
         done = torch.tensor([exp.done]).cuda().squeeze()
-        exp = self.Transition(state, next_state, action,
-                              reward, done)
+        exp = Transition(state, next_state, action,
+                         reward, done)
         self.memory.push(exp)
 
     def update(self, episode):
