@@ -147,7 +147,8 @@ class Brain:
 
         self.noisy = cfg.noisy
 
-        if cfg.category:
+        self.categorical = cfg.categorical
+        if self.categorical:
             self.n_atoms = cfg.n_atoms
             self.V_min = cfg.V_min
             self.V_max = cfg.V_max
@@ -155,6 +156,8 @@ class Brain:
                 self.delta_z = (self.V_max - self.V_min) / (self.n_atoms - 1)
                 self.support = torch.linspace(
                     self.V_min, self.V_max, self.n_atoms).to('cuda')
+        else:
+            self.n_atoms = 1
 
     def synchronize_model(self):
         # モデルの同期

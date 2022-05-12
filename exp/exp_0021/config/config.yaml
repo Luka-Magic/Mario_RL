@@ -43,7 +43,7 @@ multi_step_learning: True
 n_multi_steps: 3
 
 noisy: True
-category: False
+categorical: False
 n_atoms: 1
 ######   Leaning   ###############################
 # model
