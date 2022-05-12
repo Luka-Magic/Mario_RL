@@ -33,10 +33,10 @@ memory_compress: False
 # per
 PER:
   use_PER: True
-  priority_epsilon: 0.0001
-  priority_alpha: 0.6
-  priority_use_IS: True
-  priority_beta: 0.4
+priority_epsilon: 0.0001
+priority_alpha: 0.6
+priority_use_IS: True
+priority_beta: 0.4
 
 # multi-step learning
 multi_step_learning: True
