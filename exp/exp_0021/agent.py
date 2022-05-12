@@ -394,7 +394,8 @@ class Mario:
         return self.restart_episode
 
     def log_episode(self, episode, info):
-        if self.wandb == False:return
+        if self.wandb == False:
+            return
         self.episode = episode
         self.logger.log_episode(episode, info)
 
@@ -482,7 +483,5 @@ class Logger:
             wandb_dict['video'] = wandb.Video(
                 info['video'], fps=self.video_save_fps, format='mp4', caption=f'episode: {episode}')
             wandb.log(wandb_dict)
-        
+
         self._reset_episode_log()
-
-
