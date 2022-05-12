@@ -54,7 +54,7 @@ class Memory:
 
 class PERMemory(Memory):
     def __init__(self, cfg):
-        super().__init__()
+        super().__init__(cfg)
         self.memory = SumTree(self.memory_size)
 
         self.n_episodes = cfg.n_episodes
