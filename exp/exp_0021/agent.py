@@ -141,7 +141,8 @@ class Brain:
         else:
             self.memory = Memory(cfg)
 
-        if cfg.multi_step_learning:
+        self.multi_step_trainsitions = cfg.multi_step_learning
+        if self.multi_step_learning:
             self.n_multi_steps = cfg.n_multi_steps
             self.multi_step_trainsitions = deque(maxlen=self.n_multi_steps)
 
