@@ -107,7 +107,7 @@ class PERMemory(Memory):
 class Brain:
     def __init__(self, cfg, action_dim, save_dir):
         # input
-        self.action_dim = action_dim
+        self.n_actions = action_dim
         self.save_dir = save_dir
 
         # init
@@ -335,7 +335,6 @@ class Brain:
 class Mario:
     def __init__(self, cfg, n_actions, save_dir):
         self.cfg = cfg
-        self.n_actions = n_actions
         self.step = 0
         self.episode = 0
         self.brain = Brain(cfg, n_actions, save_dir)
