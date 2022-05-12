@@ -342,6 +342,8 @@ class Mario:
         self.cfg = cfg
         self.step = 0
         self.episode = 0
+        self.restart_step = 0
+        self.restart_episode = 0
 
         self.sync_every = cfg.sync_every
         self.burnin = cfg.burnin
