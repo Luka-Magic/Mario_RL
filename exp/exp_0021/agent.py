@@ -241,7 +241,8 @@ class Brain:
         # action = torch.tensor(batch.action).to('cuda')
         # reward = torch.tensor(batch.reward).to('cuda')
         # done = torch.tensor(batch.done).to('cuda')
-        state, next_state, action, reward, done = map(lambda x:torch.tensor(x).to('cuda'))
+        state, next_state, action, reward, done = map(
+            lambda x: torch.tensor(x).to('cuda'))
 
         # non_final_mask = torch.tensor(~.done).to('cuda')
         # non_final_next_state = torch.stack([next_state for not])
@@ -276,7 +277,8 @@ class Brain:
         # action = torch.tensor(batch.action).to('cuda')
         # reward = torch.tensor(batch.reward).to('cuda')
         # done = torch.tensor(batch.done).to('cuda')
-        state, next_state, action, reward, done = map(lambda x:torch.tensor(x).to('cuda'))
+        state, next_state, action, reward, done = map(
+            lambda x: torch.tensor(x).to('cuda'))
 
         non_final_mask = torch.tensor(~done).to('cuda')
         non_final_next_state = torch.stack([one_next_state for not_done, one_next_state in zip(
@@ -333,11 +335,12 @@ class Brain:
 class Mario:
     def __init__(self, cfg, n_actions, save_dir):
         self.cfg = cfg
+        self.n_actions = n_actions
         self.step = 0
         self.episode = 0
         self.brain = Brain(cfg, n_actions, save_dir)
         self.logger = Logger()
-    
+
     def action(self, state):
         self.step += 1
         action = self.brain.select_action(state)
@@ -372,7 +375,7 @@ class Mario:
         self.step = self.restart_step
         self.episode = self.restart_episode
         return self.restart_episode
-    
+
     def log_episode(self, episode, info):
         self.episode = episode
         self.logger.log_episode(episode, info)
@@ -412,7 +415,7 @@ class Logger:
             episode_average_loss = self.episode_loss / self.episode_loss_length
             episode_average_q = self.episode_q / self.episode_loss_length
             episode_step_per_second = self.episode_loss_length / episode_time
-        
+
         if self.wandb:
             wandb_dict = dict(
                 episode=episode,
@@ -431,7 +434,7 @@ class Logger:
                 wandb_dict['video'] = wandb.Video(
                     info['video'], fps=self.video_save_fps, format='mp4', caption=f'episode: {episode}')
                 wandb.log(wandb_dict)
-        
+
         if episode != 0 and episode != self.restart_episode:
             if episode % self.save_interval == 0:
                 self._save_checkpoint(episode)
@@ -454,6 +457,7 @@ class Logger:
             f"Epsilon {self.exploration_rate:.3f} - "
             f"Time {datetime_now}"
         )
+
     def _save(self, episode):
         checkpoint_path = (self.save_dir / f'mario_net_{episode}.ckpt')
         torch.save(dict(
