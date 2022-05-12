@@ -160,7 +160,6 @@ class Brain:
         else:
             self.n_atoms = 1
 
-
     def synchronize_model(self):
         # モデルの同期
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -347,7 +346,7 @@ class Mario:
         self.sync_every = cfg.sync_every
         self.burnin = cfg.burnin
         self.learn_every = cfg.learn_every
-        
+
         self.brain = Brain(cfg, n_actions, save_dir)
         self.logger = Logger()
 
