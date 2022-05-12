@@ -396,6 +396,7 @@ class Logger:
     def __init__(self):
         self.episode_last_time = time.time()
         self.step = 0
+        self.wandb = cfg.wandb
         self._reset_episode_log()
 
     def _reset_episode_log(self):
