@@ -175,13 +175,12 @@ class Brain:
         if np.random.rand() < epsilon:
             action = np.random.randint(self.n_actions)
         else:
-            state = torch.tensor(state).cuda().unsqueeze(0)
+            state = torch.tensor(state.__array__()).cuda().unsqueeze(0)
             with torch.no_grad():
-                with autocast():
-                    if self.categorical:
-                        Q = self._get_Q_categorical(self.policy_net, state)
-                    else:
-                        Q = self._get_Q(self.policy_net, state)
+                if self.categorical:
+                    Q = self._get_Q_categorical(self.policy_net, state)
+                else:
+                    Q = self._get_Q(self.policy_net, state)
             action = torch.argmax(
                 Q, axis=1).detach().cpu()
 
@@ -344,8 +343,6 @@ class Mario:
 
     def action(self, state):
         self.step += 1
-        print(type(state))
-        print(state.shape)
         action = self.brain.select_action(state)
         return action
 

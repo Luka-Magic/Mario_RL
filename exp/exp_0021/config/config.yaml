@@ -44,11 +44,12 @@ n_multi_steps: 3
 
 noisy: True
 category: False
+n_atoms: 1
 ######   Leaning   ###############################
 # model
-n_atoms: 21
-V_min: -10
-V_max: 10
+# n_atoms: 21
+# V_min: -10
+# V_max: 10
 
 # learning
 batch_size: 32
