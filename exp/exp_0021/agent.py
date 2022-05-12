@@ -211,9 +211,7 @@ class Brain:
             state = self.multi_step_trainsitions[0].state
             next_state = self.multi_step_trainsitions[-1].next_state
             action = self.multi_step_trainsitions[0].action
-            reward = multi_step_reward
-            done = multi_step_done
-            exp = Transition(state, next_state, action, reward, done)
+            exp = Transition(state, next_state, action, multi_step_reward, multi_step_done)
 
         state = torch.tensor(exp.state).cuda()
         next_state = torch.tensor(exp.next_state).cuda()
