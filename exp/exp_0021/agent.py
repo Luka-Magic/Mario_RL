@@ -185,7 +185,7 @@ class Brain:
                 else:
                     Q = self._get_Q(self.policy_net, state)
             action = torch.argmax(
-                Q, axis=1).detach().cpu()
+                Q, axis=1).item()
 
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(
