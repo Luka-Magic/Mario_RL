@@ -362,12 +362,7 @@ class Mario:
         return action
 
     def observe(self, state, next_state, action, reward, done):
-        exp = Transition(state.__array__(),
-                         next_state.__array__(),
-                         action,
-                         reward,
-                         done
-                         )
+        exp = Transition(state.__array__(), next_state.__array__(), action, reward, done)
         self.brain.send_memory(exp)
 
     def learn(self):
