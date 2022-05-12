@@ -90,7 +90,6 @@ class PERMemory(Memory):
             batch.append(exp)
             indices.append(idx)
         weights /= weights.max()
-        print(total)
 
         batch = Transition(*map(torch.stack, zip(*batch)))
         return (indices, batch, weights)
@@ -212,8 +211,17 @@ class Brain:
             state = self.multi_step_trainsitions[0].state
             next_state = self.multi_step_trainsitions[-1].next_state
             action = self.multi_step_trainsitions[0].action
-            exp = Transition(state, next_state, action,
-                             multi_step_reward, multi_step_done)
+            reward = multi_step_reward
+            done = multi_step_done
+            exp = self.Transition(state, next_state, action, reward, done)
+        
+        state = torch.tensor(exp.state).cuda()
+        next_state = torch.tensor(exp.next_state).cuda()
+        action = torch.tensor([exp.action]).cuda().squeeze()
+        reward = torch.tensor([exp.reward]).cuda().squeeze()
+        done = torch.tensor([exp.done]).cuda().squeeze()
+        exp = self.Transition(state, next_state, action,
+                              reward, done)
         self.memory.push(exp)
 
     def update(self, episode):
