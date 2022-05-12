@@ -1,7 +1,6 @@
 ######   SETTING   #############################
-
 # init setting 
-init_learning: False
+reset_learning: False
 
 # wandb setting
 wandb: True
@@ -12,7 +11,6 @@ video_save_interval: 100
 video_save_fps: 60
 
 ######   ENV   #################################
-
 # env
 environment: 'SuperMarioBros-8-3-v1'
 
@@ -24,29 +22,27 @@ state_channel: 4
 state_skip: 4
 
 ######   BASIC   ###############################
-
 # basic
 n_episodes: 10000
 
 ######   MEMORY   ##############################
-
 # memory
 memory_size: 50000
 memory_compress: False
 
 # per
-use_PER: True
-priority_epsilon: 0.0001
-priority_alpha: 0.6
-priority_use_IS: True
-priority_beta: 0.4
+PER:
+  use_PER: True
+  priority_epsilon: 0.0001
+  priority_alpha: 0.6
+  priority_use_IS: True
+  priority_beta: 0.4
 
 # multi-step learning
-multi_step_num: 3
-multi_step_gamma: 0.9
+multi_step_learning:
+  n_multi_steps: 3
 
 ######   Leaning   ###############################
-
 # model
 n_atoms: 21
 V_min: -10

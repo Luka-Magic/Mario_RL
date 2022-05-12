@@ -89,8 +89,7 @@ class ResizeObservation(gym.ObservationWrapper):
         observation = transforms_(observation).squeeze(0)
         return observation
 
-
-def all_wrapper(env, cfg, init_episode):
+def env_wrappers(env, cfg, init_episode):
     env = RunForYourLifeEnv(env)
     env = CustomRecordVideo(
         env, cfg, init_episode=init_episode)

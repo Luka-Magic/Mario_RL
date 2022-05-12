@@ -7,7 +7,7 @@ from tqdm.notebook import tqdm
 # 環境
 import gym_super_mario_bros
 from nes_py.wrappers import JoypadSpace
-from env_wrapper import all_wrapper
+from env_wrapper import env_wrappers
 # エージェント
 from agent import Mario
 import warnings
@@ -31,9 +31,15 @@ def main(cfg: DictConfig):
     env = JoypadSpace(env, cfg.actions)
 
     # エージェント
-    mario = Mario(cfg, action_dim=env.action_space.n, save_dir=save_dir)
-    init_episode = mario.restart_episodes
-    env = all_wrapper(env, cfg, init_episode=init_episode)
+    mario = Mario(cfg, n_actions=env.action_space.n, save_dir=save_dir)
+
+    checkpoint_path = save_dir / 'mario_net.ckpt'
+    if cfg.reset_learning or not checkpoint_path.exists():
+        init_episode = 0
+    else:
+        init_episode = mario.restart_episode()
+    
+    env = env_wrappers(env, cfg, init_episode=init_episode)
 
     # 学習
     for episode in tqdm(range(init_episode, cfg.episodes)):
@@ -41,7 +47,7 @@ def main(cfg: DictConfig):
         while True:
             action = mario.action(state)
             next_state, reward, done, info = env.step(action)
-            mario.push(state, next_state, action, reward, done)
+            mario.observe(state, next_state, action, reward, done)
             mario.learn()
             state = next_state
             if done:
