@@ -223,9 +223,8 @@ class Mario:
         # check step num
         if self.curr_step % self.reset_layers_interval == 0:
             for name, param in self.policy_net.named_parameters():
-                # if re.search('model', name):
-                #     param.requires_grad = False
-                print(name)
+                if not re.search('conv', name):
+                    param.reset_parameters()
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step < self.burnin + self.restart_steps:
