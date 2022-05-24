@@ -1,67 +1,44 @@
-######   SETTING   #############################
-# init setting 
-reset_learning: False
-
-# wandb setting
-wandb: False
+######   BASIC   ###############################
+init_learning: False
 wandb_project: RL_SMB
-save_checkpoint_interval: 100
-save_model_interval: 500
-video_save_interval: 100
-video_save_fps: 60
+wandb: True
 
-######   ENV   #################################
-# env
-environment: 'SuperMarioBros-8-3-v1'
-
-# wrapper
+environment: 'SuperMarioBros-7-2-v1'
 actions: [['right', 'B'], ['right', 'A', 'B']] # 'SIMPLE_MOVEMENT'
+
 state_height: 84
 state_width: 84
 state_channel: 4
 state_skip: 4
 
-######   BASIC   ###############################
-# basic
-n_episodes: 10000
+episodes: 10000
+batch_size: 32
+save_interval: 100
+memory_length: 50000
+save_model_interval: 500
+video_save_interval: 100
+video_save_fps: 60
+reset_layers_interval: 200000
 
-######   MEMORY   ##############################
-# memory
-memory_size: 50000
 memory_compress: False
-
-# per
-PER:
-  use_PER: True
+priority_experience_reply: True
 priority_epsilon: 0.0001
 priority_alpha: 0.6
 priority_use_IS: True
 priority_beta: 0.4
+multi_step_num: 3
+multi_step_gamma: 0.99
 
-# multi-step learning
-multi_step_learning: True
-n_multi_steps: 3
-
-noisy: True
-categorical: False
-n_atoms: 1
 ######   Leaning   ###############################
-# model
-# n_atoms: 21
-# V_min: -10
-# V_max: 10
-
-# learning
-batch_size: 32
 lr: 0.00025
 optimizer: Adam
 loss_fn: SmoothL1Loss
-gamma: 0.9
+
+gamma: 0.99
 burnin: 10000
 learn_every: 3
 sync_every: 10000
 
-# exploration rate
 exploration_rate: 0.
 exploration_rate_decay: 0.999942
 exploration_rate_min: 0.
