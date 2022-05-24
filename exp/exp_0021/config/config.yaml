@@ -19,7 +19,7 @@ save_model_interval: 500
 video_save_interval: 100
 video_save_fps: 60
 n_reset_layers: 3
-reset_layers_interval: 100000
+reset_layers_interval: 50000
 
 memory_compress: False
 priority_experience_reply: True
