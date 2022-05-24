@@ -222,7 +222,7 @@ class Mario:
     def learn(self):
         # check step num
         if self.curr_step % self.reset_layers_interval == 0:
-            for name, param in self.model.named_parameters():
+            for name, param in self.policy_net.named_parameters():
                 # if re.search('model', name):
                 #     param.requires_grad = False
                 print(name)
