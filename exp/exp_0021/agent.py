@@ -224,7 +224,7 @@ class Mario:
         if self.curr_step % self.reset_layers_interval == 0:
             for name, layer in self.policy_net.named_children():
                 print(name)
-                if i == 0: continue # conv layer
+                # if i == 0: continue # conv layer
                 for n, l in layer.named_modules():
                     l.reset_parameters()
 
