@@ -222,11 +222,10 @@ class Mario:
     def learn(self):
         # check step num
         if self.curr_step % self.reset_layers_interval == 0:
-            # for name, param in self.policy_net.named_parameters():
-            #     if not re.search('conv', name):
-            #         param.reset_parameters()
-            for layer in self.policy_net.children():
-                print(layer)
+            for i, layer in enumerate(self.policy_net.children()):
+                if i != 0:
+                    layer.reset_parameters()
+                
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step < self.burnin + self.restart_steps:
