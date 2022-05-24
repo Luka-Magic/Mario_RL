@@ -223,14 +223,19 @@ class Mario:
         # check step num
         if self.curr_step % self.reset_layers_interval == 0:
             for name, layer in self.policy_net.named_children():
-                if name == 'conv':
-                    continue  # conv layer
-                for n, l in layer.named_modules():
-                    if hasattr(l, 'reset_parameters'):
-                        print(f'Reset trainable parameters of layer = {l}')
-                        l.reset_parameters()
-                    else:
-                        print(f'NOO Reset trainable parameters of layer = {l}')
+                print(name)
+                if name != 'conv':
+                    for name, layer in layer.named_children():
+                        print('name')
+                # if name == 'conv':
+                #     continue  # conv layer
+                # for n, l in layer.named_modules():
+                #     # if 
+                #     if hasattr(l, 'reset_parameters'):
+                #         print(f'Reset trainable parameters of layer = {l}')
+                #         l.reset_parameters()
+                #     else:
+                #         print(f'NOO Reset trainable parameters of layer = {l}')
 
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
