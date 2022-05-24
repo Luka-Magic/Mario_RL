@@ -81,7 +81,6 @@ class Mario:
         self.learn_every = cfg.learn_every
         self.sync_every = cfg.sync_every
         self.reset_layers_interval = cfg.reset_layers_interval
-        self.n_reset_layers = cfg.n_reset_layers
         self.init_episode()
         self.load()
 
