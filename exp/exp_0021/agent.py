@@ -225,8 +225,8 @@ class Mario:
             for name, layer in self.policy_net.named_children():
                 print(name)
                 # if i == 0: continue # conv layer
-                for n, l in layer.named_modules():
-                    l.reset_parameters()
+                # for n, l in layer.named_modules():
+                #     l.reset_parameters()
 
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
