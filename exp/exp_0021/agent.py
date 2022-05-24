@@ -229,6 +229,8 @@ class Mario:
                     if hasattr(l, 'reset_parameters'):
                         print(f'Reset trainable parameters of layer = {l}')
                         l.reset_parameters()
+                    else:
+                        print(f'NOO Reset trainable parameters of layer = {l}')
 
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
