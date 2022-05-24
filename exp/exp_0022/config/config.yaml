@@ -1,4 +1,5 @@
 ######   BASIC   ###############################
+seed: 77
 init_learning: False
 wandb_project: RL_SMB
 wandb: True
