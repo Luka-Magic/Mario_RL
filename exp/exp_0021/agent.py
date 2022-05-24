@@ -225,8 +225,8 @@ class Mario:
             for name, layer in self.policy_net.named_children():
                 print(name)
                 if name != 'conv':
-                    for name, layer in layer.named_children():
-                        print('name')
+                    for name_, layer in layer.named_children():
+                        print(name_)
                 # if name == 'conv':
                 #     continue  # conv layer
                 # for n, l in layer.named_modules():
