@@ -224,12 +224,9 @@ class Mario:
         if self.curr_step % self.reset_layers_interval == 0:
             for name, layer in self.policy_net.named_modules():
                 if re.search('^conv', name):
-                    print('convvvvv')
                     continue
                 if hasattr(layer, 'reset_parameters'):
-                    print(f'Reset trainable parameters of layer = {layer}')
                     layer.reset_parameters()
-
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step < self.burnin + self.restart_steps:
