@@ -222,11 +222,11 @@ class Mario:
     def learn(self):
         # check step num
         if self.curr_step % self.reset_layers_interval == 0:
-            for name, layer in self.policy_net.named_children():
+            for name, layer in self.policy_net.named_modules():
                 print(name)
-                if name != 'conv':
-                    for name_, layer in layer.named_children():
-                        print(name_)
+                # if name != 'conv':
+                #     for name_, layer in layer.named_():
+                #         print(name_)
                 # if name == 'conv':
                 #     continue  # conv layer
                 # for n, l in layer.named_modules():
