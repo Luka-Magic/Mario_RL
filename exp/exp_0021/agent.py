@@ -221,11 +221,11 @@ class Mario:
 
     def learn(self):
         # check step num
-        if self.curr_step % self.reset_layers_interval == 0: # 定期的にparamsのresetを行う
+        if self.curr_step % self.reset_layers_interval == 0:  # 定期的にparamsのresetを行う
             for name, layer in self.policy_net.named_modules():
-                if re.search('^conv', name): # conv層はresetしない
+                if re.search('^conv', name):  # conv層はresetしない
                     continue
-                if hasattr(layer, 'reset_parameters'): # resetできるlayerのみresetを行う
+                if hasattr(layer, 'reset_parameters'):  # resetできるlayerのみresetを行う
                     layer.reset_parameters()
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
@@ -302,7 +302,7 @@ class Mario:
 
         if info['video'] is not None:
             wandb_dict['video'] = wandb.Video(
-                info['video'], fps=self.video_save_fps, format='mp4', caption=f"episode: {episode}, x: {int(info['x_pos'])}, flag: {info['flag_get']}")
+                info['video'], fps=self.video_save_fps, format='gif', caption=f"episode: {episode}, x: {int(info['x_pos'])}, flag: {info['flag_get']}")
         if self.wandb:
             wandb.log(wandb_dict)
         self.save(episode)
