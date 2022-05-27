@@ -11,10 +11,12 @@ from env_wrapper import all_wrapper
 # エージェント
 from agent import Mario
 import warnings
+from utils.utils import seed_everything
 
 @hydra.main(config_path='config', config_name='config')
 def main(cfg: DictConfig):
     # 設定
+    seed_everything(cfg.seed)
     save_dir = Path('/'.join(os.getcwd().split('/')
                     [:-6])) / f"outputs/{os.getcwd().split('/')[-4]}"
     save_dir.mkdir(exist_ok=True)
